@@ -1,0 +1,94 @@
+#########################
+# Global
+#########################
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+
+#########################
+# Go
+#########################
+# Build output
+*.out
+*.exe
+*.test
+
+# Binaries
+/bin/
+/dist/
+/build/
+
+# Vendor (optional - if not using go mod vendor)
+vendor/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment & secrets
+.env
+.env.*
+
+# Go tools
+/go.sum
+/go.work
+/go.work.sum
+
+# Dev tools
+.air/
+
+#########################
+# C# / .NET
+#########################
+# Build output
+bin/
+obj/
+
+# Rider / VS / VSCode
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Temporary
+*.vspscc
+*.vssscc
+*.orig
+*.aps
+
+# Environment
+appsettings.Development.json
+appsettings.Local.json
+*.secrets.json
+
+# NuGet packages (if used locally)
+*.nupkg
+packages/
+
+#########################
+# Test artifacts
+#########################
+*.testresult
+/testresults/
+*.coverprofile
+*.lcov
+coverage.*
+
+#########################
+# Node (if frontend or tooling involved)
+#########################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+#########################
+# OS-specific
+#########################
+ehthumbs.db
+Icon?
+desktop.ini
