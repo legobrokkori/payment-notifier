@@ -1,0 +1,60 @@
+name: Webhook Integration Test
+
+on:
+  push:
+    paths:
+      - 'payment-receiver/**'
+      - '.github/workflows/ci-webhook-integration-test.yml'
+  pull_request:
+    paths:
+      - 'payment-receiver/**'
+      - '.github/workflows/ci-webhook-integration-test.yml'
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: payment
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: payment-receiver/go.mod
+
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/migrate
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {1..10}; do
+            pg_isready -h localhost -p 5432 && break
+            echo "Waiting for PostgreSQL..."
+            sleep 3
+          done
+
+      - name: Run migrations via Makefile
+        run: make migrate-up
+        working-directory: payment-receiver
+
+      - name: Run integration tests
+        run: make test-integration
+        working-directory: payment-receiver

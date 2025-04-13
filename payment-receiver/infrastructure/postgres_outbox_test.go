@@ -16,6 +16,10 @@ import (
 
 func setupTestDB(t *testing.T) *sql.DB {
 	dsn := os.Getenv("POSTGRES_DSN")
+	if dsn == "" {
+		// fallback for local/integration test environments
+		dsn = "postgres://user:password@localhost:5432/payment?sslmode=disable"
+	}
 	db, err := infrastructure.NewPostgres(dsn)
 	if err != nil {
 		t.Fatalf("failed to connect to DB: %v", err)
