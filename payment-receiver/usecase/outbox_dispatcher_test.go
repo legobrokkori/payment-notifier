@@ -19,12 +19,12 @@ type mockOutboxRepo struct {
 	Marked  []uuid.UUID
 }
 
-func (m *mockOutboxRepo) Insert(ctx context.Context, event *domain.OutboxEvent) error {
+func (m *mockOutboxRepo) Insert(_ context.Context, _ *domain.OutboxEvent) error {
 	// テストでは使わないなら空でOK
 	return nil
 }
 
-func (m *mockOutboxRepo) FetchPending(_ context.Context, limit int) ([]*domain.OutboxEvent, error) {
+func (m *mockOutboxRepo) FetchPending(_ context.Context, _ int) ([]*domain.OutboxEvent, error) {
 	m.Fetched = true
 	return []*domain.OutboxEvent{
 		{

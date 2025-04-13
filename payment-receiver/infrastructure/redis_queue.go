@@ -20,8 +20,10 @@ type RedisQueue struct {
 	timeout time.Duration
 }
 
-// Ensure RedisQueue implements the OutboxQueue interface at compile time.
-var _ usecase.OutboxQueue = (*RedisQueue)(nil)
+// Ensure RedisQueue implements both interfaces
+var (
+	_ usecase.OutboxQueue = (*RedisQueue)(nil)
+)
 
 // NewRedisQueue creates and initializes a new RedisQueue instance.
 // It connects to Redis using the provided address, password, and queue name.
@@ -39,16 +41,20 @@ func NewRedisQueue(addr, password, queueName string) *RedisQueue {
 	}
 }
 
-// Enqueue serializes the given OutboxEvent as JSON and pushes it to the Redis queue.
-// This method sets a timeout to avoid hanging connections.
-func (q *RedisQueue) Enqueue(ctx context.Context, event *domain.OutboxEvent) error {
+// enqueueToRedis serializes the given event and pushes it to Redis.
+func (q *RedisQueue) enqueueToRedis(ctx context.Context, event interface{}) error {
 	data, err := json.Marshal(event)
 	if err != nil {
-		return fmt.Errorf("failed to marshal outbox event: %w", err)
+		return fmt.Errorf("failed to marshal event: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, q.timeout)
 	defer cancel()
 
 	return q.rdb.RPush(ctx, q.queue, data).Err()
+}
+
+// Enqueue implements OutboxQueue interface.
+func (q *RedisQueue) Enqueue(ctx context.Context, event *domain.OutboxEvent) error {
+	return q.enqueueToRedis(ctx, event)
 }
