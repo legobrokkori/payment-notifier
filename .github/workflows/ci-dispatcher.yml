@@ -1,20 +1,20 @@
-name: Webhook Receiver CI
+name: Dispatcher CI
 
 on:
   push:
     paths:
-      - 'payment-receiver/cmd/webhook/**'
+      - 'payment-receiver/cmd/dispatcher/**'
       - 'payment-receiver/domain/**'
-      - 'payment-receiver/handler/**'
       - 'payment-receiver/usecase/**'
-      - '.github/workflows/ci-webhook.yml'
+      - 'payment-receiver/repository/**'
+      - '.github/workflows/ci-dispatcher.yml'
   pull_request:
     paths:
-      - 'payment-receiver/cmd/webhook/**'
+      - 'payment-receiver/cmd/dispatcher/**'
       - 'payment-receiver/domain/**'
-      - 'payment-receiver/handler/**'
       - 'payment-receiver/usecase/**'
-      - '.github/workflows/ci-webhook.yml'
+      - 'payment-receiver/repository/**'
+      - '.github/workflows/ci-dispatcher.yml'
 
 jobs:
   build-and-test:
@@ -57,8 +57,8 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Build webhook
-        run: make build-webhook
+      - name: Build dispatcher
+        run: make build-dispatcher
 
       - name: Run tests
         run: make test

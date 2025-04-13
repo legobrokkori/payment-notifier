@@ -5,7 +5,7 @@ GO_FILES := $(shell find . -name '*.go' -not -path "./vendor/*")
 
 .PHONY: all build-webhook build-dispatcher run-webhook run-dispatcher test lint fmt clean
 
-all: lint test
+all: fmt lint test
 
 ## Build binaries
 build-webhook:
@@ -16,9 +16,11 @@ build-dispatcher:
 
 ## Run local binaries
 run-webhook:
+	@if [ ! -f $(BIN_DIR)/webhook ]; then echo "Webhook binary not found. Run 'make build-webhook' first."; exit 1; fi
 	$(BIN_DIR)/webhook
 
 run-dispatcher:
+	@if [ ! -f $(BIN_DIR)/dispatcher ]; then echo "Dispatcher binary not found. Run 'make build-dispatcher' first."; exit 1; fi
 	$(BIN_DIR)/dispatcher
 
 ## Format code
