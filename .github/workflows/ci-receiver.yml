@@ -1,0 +1,39 @@
+name: Webhook Receiver CI
+
+on:
+  push:
+    paths:
+      - 'payment-receiver/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'payment-receiver/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: payment-receiver/go.mod
+          cache: true
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          working-directory: payment-receiver
+
+      - name: Build
+        run: go build ./...
+        working-directory: payment-receiver
+
+      - name: Run tests
+        run: go test -v ./...
+        working-directory: payment-receiver
