@@ -1,1 +1,24 @@
 // TODO: implement
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - unused
+    - structcheck
+    - deadcode
+    - gofmt
+    - goimports
+    - revive
+    - ineffassign
+
+issues:
+  exclude-use-default: false
+
+output:
+  format: colored-line-number
