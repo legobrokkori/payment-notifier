@@ -19,7 +19,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to DB: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("failed to close DB: %v", err)
+		}
+	}()
 
 	// Outbox Repository 初期化
 	outboxRepo := infrastructure.NewPostgresOutbox(db)

@@ -1,12 +1,12 @@
 run:
   timeout: 2m
   tests: true
-  skip-dirs:
+  exclude-dirs:
     - vendor
 
 output:
   formats:
-    - github-actions
+    - colored-line-number
 
 linters:
   enable:

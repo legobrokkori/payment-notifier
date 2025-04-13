@@ -6,28 +6,30 @@ import (
 	"time"
 
 	"payment-receiver/domain"
+	"payment-receiver/usecase"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// mockPaymentQueue implements usecase.PaymentQueue for testing
-type mockPaymentQueue struct {
+// mockQueue implements usecase.PaymentQueue for testing
+type mockQueue struct {
 	called bool
 	event  *domain.PaymentEvent
 }
 
-func (m *mockPaymentQueue) Enqueue(ctx context.Context, event *domain.PaymentEvent) error {
+func (m *mockQueue) EnqueuePaymentEvent(ctx context.Context, event *domain.PaymentEvent) error {
 	m.called = true
 	m.event = event
 	return nil
 }
 
-func TestPaymentQueue_Enqueue(t *testing.T) {
-	mock := &mockPaymentQueue{}
+func TestEnqueuePaymentEvent(t *testing.T) {
+	mock := &mockQueue{}
+	usecase.InjectPaymentQueue(mock)
 
-	occurredAt, _ := time.Parse(time.RFC3339, "2024-04-01T12:00:00Z")
+	occurredAt := time.Now()
 	event := &domain.PaymentEvent{
-		ID:         "test-id",
+		ID:         "test-123",
 		Amount:     1000,
 		Currency:   "USD",
 		Method:     "card",
@@ -35,8 +37,7 @@ func TestPaymentQueue_Enqueue(t *testing.T) {
 		OccurredAt: occurredAt,
 	}
 
-	// 呼び出すテスト関数
-	err := mock.Enqueue(context.Background(), event)
+	err := usecase.EnqueuePaymentEvent(event)
 
 	assert.NoError(t, err)
 	assert.True(t, mock.called)

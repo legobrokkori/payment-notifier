@@ -1,69 +1,68 @@
 // usecase/outbox_dispatcher_test.go
-package usecase
+package usecase_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
 	"payment-receiver/domain"
+	"payment-receiver/usecase"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-type mockRepo struct {
-	mock.Mock
+type mockOutboxRepo struct {
+	Fetched bool
+	Marked  []uuid.UUID
 }
 
-func (m *mockRepo) Insert(ctx context.Context, event *domain.OutboxEvent) error {
-	args := m.Called(ctx, event)
-	return args.Error(0)
+func (m *mockOutboxRepo) Insert(ctx context.Context, event *domain.OutboxEvent) error {
+	// テストでは使わないなら空でOK
+	return nil
 }
 
-func (m *mockRepo) FetchPending(ctx context.Context, limit int) ([]*domain.OutboxEvent, error) {
-	args := m.Called(ctx, limit)
-	return args.Get(0).([]*domain.OutboxEvent), args.Error(1)
+func (m *mockOutboxRepo) FetchPending(_ context.Context, limit int) ([]*domain.OutboxEvent, error) {
+	m.Fetched = true
+	return []*domain.OutboxEvent{
+		{
+			ID:          uuid.New(),
+			AggregateID: "user_123",
+			EventType:   "PaymentCompleted",
+			Payload:     json.RawMessage(`{"id":"evt_001"}`),
+			Status:      "pending",
+			CreatedAt:   time.Now(),
+		},
+	}, nil
 }
 
-func (m *mockRepo) MarkAsSent(ctx context.Context, id uuid.UUID) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
+func (m *mockOutboxRepo) MarkAsSent(_ context.Context, id uuid.UUID) error {
+	m.Marked = append(m.Marked, id)
+	return nil
 }
 
-type mockQueue struct {
-	mock.Mock
+type mockOutboxQueue struct {
+	Called bool
+	Event  *domain.OutboxEvent
 }
 
-func (m *mockQueue) Enqueue(ctx context.Context, event *domain.OutboxEvent) error {
-	args := m.Called(ctx, event)
-	return args.Error(0)
+func (m *mockOutboxQueue) Enqueue(_ context.Context, event *domain.OutboxEvent) error {
+	m.Called = true
+	m.Event = event
+	return nil
 }
 
 func TestOutboxDispatcher_Dispatch(t *testing.T) {
-	ctx := context.Background()
-	id := uuid.New()
-	event := &domain.OutboxEvent{
-		ID:          id,
-		AggregateID: "user-123",
-		EventType:   "payment.created",
-		Payload:     []byte(`{"amount": 1000}`),
-		Status:      domain.StatusPending,
-		CreatedAt:   time.Now(),
-	}
+	repo := &mockOutboxRepo{}
+	queue := &mockOutboxQueue{}
 
-	repo := new(mockRepo)
-	queue := new(mockQueue)
-	dispatcher := NewOutboxDispatcher(repo, queue)
+	dispatcher := usecase.NewOutboxDispatcher(repo, queue)
+	err := dispatcher.Dispatch(context.Background(), 10)
 
-	repo.On("FetchPending", ctx, 10).Return([]*domain.OutboxEvent{event}, nil)
-	queue.On("Enqueue", ctx, event).Return(nil)
-	repo.On("MarkAsSent", ctx, id).Return(nil)
-
-	err := dispatcher.Dispatch(ctx, 10)
 	assert.NoError(t, err)
-
-	repo.AssertExpectations(t)
-	queue.AssertExpectations(t)
+	assert.True(t, repo.Fetched)
+	assert.True(t, queue.Called)
+	assert.Len(t, repo.Marked, 1)
 }
