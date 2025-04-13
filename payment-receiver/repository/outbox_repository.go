@@ -14,4 +14,5 @@ type OutboxRepository interface {
 	Insert(ctx context.Context, event *domain.OutboxEvent) error
 	FetchPending(ctx context.Context, limit int) ([]*domain.OutboxEvent, error)
 	MarkAsSent(ctx context.Context, id uuid.UUID) error
+	ExistsByAggregateID(ctx context.Context, aggregateID string) (bool, error)
 }

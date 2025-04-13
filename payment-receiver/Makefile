@@ -3,9 +3,15 @@ BIN_DIR := bin
 CMD_DIR := ./cmd
 GO_FILES := $(shell find . -name '*.go' -not -path "./vendor/*")
 
-.PHONY: all build-webhook build-dispatcher run-webhook run-dispatcher test lint fmt clean
+MIGRATE_VERSION := v4.16.2
+MIGRATE := migrate
 
-all: fmt lint test
+MIGRATE_DB_URL := postgres://user:password@localhost:5432/payment?sslmode=disable
+MIGRATE_DIR := migrations
+
+.PHONY: all build-webhook build-dispatcher run-webhook run-dispatcher test-unit test-integration lint fmt clean migrate-up migrate-down migrate-create
+
+all: fmt lint test-unit test-integration
 
 ## Build binaries
 build-webhook:
@@ -34,8 +40,22 @@ lint:
 	golangci-lint run
 
 ## Test
-test:
-	go test ./... -v
+# Run unit tests (excluding infrastructure or external services)
+test-unit:
+	go test -v $(shell go list ./... | grep -v /infrastructure)
+
+# Run integration tests (requires PostgreSQL, etc.)
+test-integration:
+	go test -v ./infrastructure
 
 clean:
 	rm -rf $(BIN_DIR)
+
+migrate-up:
+	$(MIGRATE) -path $(MIGRATE_DIR) -database "$(MIGRATE_DB_URL)" up
+
+migrate-down:
+	$(MIGRATE) -path $(MIGRATE_DIR) -database "$(MIGRATE_DB_URL)" down
+
+migrate-create:
+	$(MIGRATE) create -ext sql -dir $(MIGRATE_DIR) -format timestamp "$(name)"

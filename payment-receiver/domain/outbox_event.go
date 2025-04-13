@@ -28,10 +28,11 @@ type OutboxEvent struct {
 	Status      OutboxStatus
 	CreatedAt   time.Time
 	SentAt      *time.Time
+	EventAt     time.Time
 }
 
 // NewOutboxEvent constructs a new OutboxEvent with validation.
-func NewOutboxEvent(aggregateID, eventType string, payload interface{}) (*OutboxEvent, error) {
+func NewOutboxEvent(aggregateID, eventType string, eventAt time.Time, payload interface{}) (*OutboxEvent, error) {
 	if aggregateID == "" || eventType == "" {
 		return nil, errors.New("aggregateID and eventType are required")
 	}
@@ -47,6 +48,7 @@ func NewOutboxEvent(aggregateID, eventType string, payload interface{}) (*Outbox
 		EventType:   eventType,
 		Payload:     data,
 		Status:      StatusPending,
+		EventAt:     eventAt,
 		CreatedAt:   time.Now(),
 	}, nil
 }

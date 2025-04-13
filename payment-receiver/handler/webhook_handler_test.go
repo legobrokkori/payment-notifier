@@ -11,6 +11,7 @@ import (
 
 	"payment-receiver/domain"
 	"payment-receiver/handler"
+	"payment-receiver/usecase"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +52,7 @@ func TestWebhookHandler_Success(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusCreated, w.Code)
 	assert.True(t, mock.called)
 	assert.Equal(t, "evt_001", mock.event.ID)
 	assert.Equal(t, 1200, mock.event.Amount)
@@ -64,4 +65,34 @@ func TestWebhookHandler_Success(t *testing.T) {
 func mustParse(s string) time.Time {
 	t, _ := time.Parse(time.RFC3339, s)
 	return t
+}
+
+func TestWebhookHandler_Duplicate(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mock := &mockOutboxEnqueuer{
+		err: usecase.ErrDuplicateEvent,
+	}
+	router := gin.Default()
+	router.POST("/webhook", handler.WebhookHandler(mock))
+
+	body := map[string]interface{}{
+		"id":          "evt_001",
+		"amount":      1200,
+		"currency":    "USD",
+		"method":      "card",
+		"status":      "paid",
+		"occurred_at": "2024-04-01T12:00:00Z",
+	}
+	jsonBody, _ := json.Marshal(body)
+
+	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.True(t, mock.called)
+	assert.Contains(t, w.Body.String(), `"duplicate"`)
 }
