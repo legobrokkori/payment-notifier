@@ -1,0 +1,13 @@
+services:
+  dispatcher:
+    build:
+      context: ./payment-receiver
+      dockerfile: Dockerfile.dispatcher
+    command: ./dispatcher
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      REDIS_ADDR: redis:6379
+      REDIS_QUEUE: outbox-events
+      POSTGRES_DSN: postgres://user:password@postgres:5432/payment?sslmode=disable

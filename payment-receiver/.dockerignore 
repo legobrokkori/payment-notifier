@@ -1,0 +1,23 @@
+# Ignore binary outputs
+bin/
+*.exe
+*.out
+*.log
+
+# Ignore Git-related files
+.git
+.gitignore
+
+# Ignore IDE/editor settings
+.vscode/
+.idea/
+
+# Ignore OS metadata
+.DS_Store
+
+# Ignore test result files and coverage
+coverage.*
+*.test
+
+# Ignore third-party packages (if vendored)
+vendor/

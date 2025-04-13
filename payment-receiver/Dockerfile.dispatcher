@@ -1,13 +1,15 @@
+# Stage 1: Build
 FROM golang:1.24.2 AS build
 
 WORKDIR /app
 COPY . .
 
 RUN go mod tidy
-RUN go build -o main ./cmd/dispatcher
+RUN go build -o dispatcher ./cmd/dispatcher
 
+# Stage 2: Runtime
 FROM golang:1.24.2 AS run
 WORKDIR /app
-COPY --from=build /app/main .
+COPY --from=build /app/dispatcher .
 
-CMD ["./main"]
+CMD ["./dispatcher"]

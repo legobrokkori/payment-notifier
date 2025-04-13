@@ -8,17 +8,17 @@ services:
     volumes:
       - redis-data:/data
 
-  payment-receiver:
-    build:
-      context: ./payment-receiver
-    ports:
-      - "8080:8080"
+  postgres:
+    image: postgres:16
     environment:
-      - REDIS_ADDR=redis:6379
-      - REDIS_QUEUE=payment-events
-    depends_on:
-      - redis
-    restart: on-failure
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: payment
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
 
   payment-processor:
     build:
@@ -31,3 +31,4 @@ services:
 
 volumes:
   redis-data:
+  pgdata:
