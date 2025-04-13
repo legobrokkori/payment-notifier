@@ -58,7 +58,7 @@ func WebhookHandler(enqueuer usecase.OutboxEventSaver) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(http.StatusCreated, gin.H{
 			"status":  "received",
 			"payload": event,
 		})
