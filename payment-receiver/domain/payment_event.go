@@ -16,6 +16,7 @@ var validStatuses = map[string]struct{}{
 	StatusRefunded: {},
 }
 
+// IsValidStatus checks if the given status is a valid payment status.
 func IsValidStatus(status string) bool {
 	_, ok := validStatuses[status]
 	return ok
