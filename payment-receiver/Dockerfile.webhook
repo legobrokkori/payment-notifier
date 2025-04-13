@@ -1,14 +1,16 @@
+# Stage 1: Build
 FROM golang:1.24.2 AS build
 
 WORKDIR /app
 COPY . .
 
 RUN go mod tidy
-RUN go build -o main ./cmd/webhook
+RUN go build -o webhook ./cmd/webhook
 
+# Stage 2: Runtime
 FROM golang:1.24.2 AS run
 WORKDIR /app
-COPY --from=build /app/main .
+COPY --from=build /app/webhook .
 
 EXPOSE 8080
-CMD ["./main"]
+CMD ["./webhook"]

@@ -1,0 +1,15 @@
+services:
+  webhook:
+    build:
+      context: ./payment-receiver
+      dockerfile: Dockerfile.webhook
+    command: ./webhook
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      REDIS_ADDR: redis:6379
+      REDIS_QUEUE: payment-events
+      POSTGRES_DSN: postgres://user:password@postgres:5432/payment?sslmode=disable
