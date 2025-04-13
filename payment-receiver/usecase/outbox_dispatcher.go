@@ -1,4 +1,4 @@
-// usecase/outbox_dispatcher.go
+// Package usecase contains application logic and orchestrators.
 package usecase
 
 import (
@@ -9,19 +9,23 @@ import (
 	"time"
 )
 
+// Queue defines the interface for enqueuing outbox events.
 type Queue interface {
 	Enqueue(ctx context.Context, event *domain.OutboxEvent) error
 }
 
+// OutboxDispatcher processes pending outbox events and dispatches them to a queue.
 type OutboxDispatcher struct {
 	repo  repository.OutboxRepository
 	queue Queue
 }
 
+// NewOutboxDispatcher returns a new instance of OutboxDispatcher.
 func NewOutboxDispatcher(repo repository.OutboxRepository, queue Queue) *OutboxDispatcher {
 	return &OutboxDispatcher{repo: repo, queue: queue}
 }
 
+// Dispatch retrieves pending events and enqueues them, marking them as sent.
 func (d *OutboxDispatcher) Dispatch(ctx context.Context, limit int) error {
 	events, err := d.repo.FetchPending(ctx, limit)
 	if err != nil {
@@ -31,14 +35,12 @@ func (d *OutboxDispatcher) Dispatch(ctx context.Context, limit int) error {
 	for _, ev := range events {
 		err := d.queue.Enqueue(ctx, ev)
 		if err != nil {
-			// log error, but continue with others
 			fmt.Printf("enqueue failed for event %s: %v\n", ev.ID, err)
 			continue
 		}
 		if err := d.repo.MarkAsSent(ctx, ev.ID); err != nil {
 			fmt.Printf("mark as sent failed for event %s: %v\n", ev.ID, err)
 		}
-		// optional: sleep to throttle
 		time.Sleep(100 * time.Millisecond)
 	}
 

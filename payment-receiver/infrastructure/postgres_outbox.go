@@ -1,9 +1,10 @@
-// infrastructure/postgres_outbox.go
+// Package infrastructure implements repository interfaces using concrete tools like Redis and Postgres.
 package infrastructure
 
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"payment-receiver/domain"
@@ -11,14 +12,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// PostgresOutbox implements the OutboxRepository interface using PostgreSQL.
 type PostgresOutbox struct {
 	db *sql.DB
 }
 
+// NewPostgresOutbox creates a new Postgres outbox repository.
 func NewPostgresOutbox(db *sql.DB) *PostgresOutbox {
 	return &PostgresOutbox{db: db}
 }
 
+// Insert inserts a new outbox event.
 func (o *PostgresOutbox) Insert(ctx context.Context, event *domain.OutboxEvent) error {
 	_, err := o.db.ExecContext(ctx, `
 		INSERT INTO outbox_events (
@@ -28,6 +32,7 @@ func (o *PostgresOutbox) Insert(ctx context.Context, event *domain.OutboxEvent) 
 	return err
 }
 
+// FetchPending retrieves pending events up to a limit.
 func (o *PostgresOutbox) FetchPending(ctx context.Context, limit int) ([]*domain.OutboxEvent, error) {
 	rows, err := o.db.QueryContext(ctx, `
 		SELECT id, aggregate_id, event_type, payload, status, created_at, sent_at
@@ -39,7 +44,11 @@ func (o *PostgresOutbox) FetchPending(ctx context.Context, limit int) ([]*domain
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Println("failed to close rows:", err)
+		}
+	}()
 
 	var events []*domain.OutboxEvent
 	for rows.Next() {
@@ -56,6 +65,7 @@ func (o *PostgresOutbox) FetchPending(ctx context.Context, limit int) ([]*domain
 	return events, nil
 }
 
+// MarkAsSent marks an event as sent.
 func (o *PostgresOutbox) MarkAsSent(ctx context.Context, id uuid.UUID) error {
 	sentAt := time.Now()
 	_, err := o.db.ExecContext(ctx, `

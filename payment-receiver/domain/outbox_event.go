@@ -1,4 +1,4 @@
-// domain/outbox_event.go
+// Package domain handles core business entities and logic.
 package domain
 
 import (
@@ -9,14 +9,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// OutboxStatus represents the status of an outbox event.
 type OutboxStatus string
 
+// StatusPending indicates the event is not yet sent.
 const (
 	StatusPending OutboxStatus = "pending"
 	StatusSent    OutboxStatus = "sent"
 	StatusFailed  OutboxStatus = "failed"
 )
 
+// OutboxEvent represents a stored domain event for async dispatch.
 type OutboxEvent struct {
 	ID          uuid.UUID
 	AggregateID string
@@ -27,6 +30,7 @@ type OutboxEvent struct {
 	SentAt      *time.Time
 }
 
+// NewOutboxEvent constructs a new OutboxEvent with validation.
 func NewOutboxEvent(aggregateID, eventType string, payload interface{}) (*OutboxEvent, error) {
 	if aggregateID == "" || eventType == "" {
 		return nil, errors.New("aggregateID and eventType are required")
