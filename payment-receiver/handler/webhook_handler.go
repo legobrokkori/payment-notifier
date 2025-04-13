@@ -11,11 +11,11 @@ import (
 
 // WebhookRequest represents the incoming webhook payload (DTO)
 type WebhookRequest struct {
-	ID         string `json:"id" binding:"required"`
-	Amount     int    `json:"amount" binding:"required"`
-	Currency   string `json:"currency" binding:"required"`
-	Method     string `json:"method" binding:"required"`
-	Status     string `json:"status" binding:"required"`
+	ID         string `json:"id"          binding:"required"`
+	Amount     int    `json:"amount"      binding:"required"`
+	Currency   string `json:"currency"    binding:"required"`
+	Method     string `json:"method"      binding:"required"`
+	Status     string `json:"status"      binding:"required"`
 	OccurredAt string `json:"occurred_at" binding:"required"`
 }
 

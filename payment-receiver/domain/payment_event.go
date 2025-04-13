@@ -42,7 +42,8 @@ func NewPaymentEvent(
 	status string,
 	occurredAt string,
 ) (*PaymentEvent, error) {
-	if id == "" || amount == 0 || currency == "" || method == "" || status == "" || occurredAt == "" {
+	if id == "" || amount == 0 || currency == "" || method == "" || status == "" ||
+		occurredAt == "" {
 		return nil, errors.New("all fields are required")
 	}
 

@@ -4,8 +4,9 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"payment-receiver/repository"
 	"time"
+
+	"payment-receiver/repository"
 )
 
 // OutboxDispatcher processes pending outbox events and dispatches them to a queue.
