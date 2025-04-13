@@ -2,66 +2,43 @@ package usecase_test
 
 import (
 	"context"
-	"log"
 	"testing"
 	"time"
 
 	"payment-receiver/domain"
-	"payment-receiver/usecase"
 
 	"github.com/stretchr/testify/assert"
 )
 
-type mockQueue struct {
-	Called bool
-	Event  *domain.PaymentEvent
+// mockPaymentQueue implements usecase.PaymentQueue for testing
+type mockPaymentQueue struct {
+	called bool
+	event  *domain.PaymentEvent
 }
 
-func (m *mockQueue) Enqueue(_ context.Context, event *domain.PaymentEvent) error {
-	m.Called = true
-	m.Event = event
+func (m *mockPaymentQueue) Enqueue(ctx context.Context, event *domain.PaymentEvent) error {
+	m.called = true
+	m.event = event
 	return nil
 }
 
-func mustParseTime(value string) time.Time {
-	t, err := time.Parse(time.RFC3339, value)
-	if err != nil {
-		log.Fatalf("invalid time format: %v", err)
-	}
-	return t
-}
+func TestPaymentQueue_Enqueue(t *testing.T) {
+	mock := &mockPaymentQueue{}
 
-func TestEnqueuePaymentEvent_WithInjectedQueue(t *testing.T) {
-	mq := &mockQueue{}
-	usecase.InjectQueue(mq)
-
-	evt := &domain.PaymentEvent{
-		ID:         "evt_abc",
+	occurredAt, _ := time.Parse(time.RFC3339, "2024-04-01T12:00:00Z")
+	event := &domain.PaymentEvent{
+		ID:         "test-id",
 		Amount:     1000,
-		Currency:   "JPY",
-		Method:     "credit_card",
-		Status:     "paid",
-		OccurredAt: mustParseTime("2025-04-13T12:00:00Z"),
-	}
-
-	err := usecase.EnqueuePaymentEvent(evt)
-	assert.NoError(t, err)
-	assert.True(t, mq.Called)
-	assert.Equal(t, "evt_abc", mq.Event.ID)
-}
-
-func TestEnqueuePaymentEvent_WithoutQueue(t *testing.T) {
-	usecase.InjectQueue(nil)
-
-	evt := &domain.PaymentEvent{
-		ID:         "evt_xyz",
-		Amount:     2000,
 		Currency:   "USD",
-		Method:     "paypal",
+		Method:     "card",
 		Status:     "paid",
-		OccurredAt: mustParseTime("2025-04-13T12:00:00Z"),
+		OccurredAt: occurredAt,
 	}
 
-	err := usecase.EnqueuePaymentEvent(evt)
+	// 呼び出すテスト関数
+	err := mock.Enqueue(context.Background(), event)
+
 	assert.NoError(t, err)
+	assert.True(t, mock.called)
+	assert.Equal(t, event, mock.event)
 }

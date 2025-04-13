@@ -2,31 +2,44 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
-	"payment-receiver/handler"
 	"payment-receiver/infrastructure"
-
-	"github.com/gin-gonic/gin"
+	"payment-receiver/usecase"
 )
 
 func main() {
-	// load .env if needed (optional)
-	_ = os.Setenv("GIN_MODE", "release")
+	ctx := context.Background()
 
-	// DI setup
-	infrastructure.InitRedisAndInject()
+	// Postgres 接続
+	dsn := os.Getenv("POSTGRES_DSN")
+	db, err := infrastructure.NewPostgres(dsn)
+	if err != nil {
+		log.Fatalf("failed to connect to DB: %v", err)
+	}
+	defer db.Close()
 
-	r := gin.Default()
-	r.POST("/webhook", handler.WebhookHandler)
+	// Outbox Repository 初期化
+	outboxRepo := infrastructure.NewPostgresOutbox(db)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	// Redis キュー初期化（Outbox用）
+	redisQueue := infrastructure.NewRedisQueue(
+		os.Getenv("REDIS_ADDR"),
+		os.Getenv("REDIS_PASSWORD"),
+		"outbox-events",
+	)
+
+	// Dispatcher 構築
+	dispatcher := usecase.NewOutboxDispatcher(outboxRepo, redisQueue)
+
+	// 実行
+	log.Println("Running outbox dispatcher...")
+	if err := dispatcher.Dispatch(ctx, 10); err != nil {
+		log.Printf("dispatch error: %v", err)
 	}
 
-	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("server failed to start: %v", err)
-	}
+	// 一回だけ実行で終了（cronジョブ想定）
+	log.Println("Dispatcher finished.")
 }
