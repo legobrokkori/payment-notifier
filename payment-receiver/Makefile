@@ -1,27 +1,39 @@
-APP_NAME=payment-receiver
-GO_FILES=$(shell find . -name '*.go' -not -path "./vendor/*")
+APP_NAME := payment-receiver
+BIN_DIR := bin
+CMD_DIR := ./cmd
+GO_FILES := $(shell find . -name '*.go' -not -path "./vendor/*")
 
-.PHONY: all build run test lint clean
+.PHONY: all build-webhook build-dispatcher run-webhook run-dispatcher test lint fmt clean
 
 all: lint test
 
-build:
-	go build -o bin/$(APP_NAME) ./...
+## Build binaries
+build-webhook:
+	go build -o $(BIN_DIR)/webhook $(CMD_DIR)/webhook
 
-run:
-	go run main.go
+build-dispatcher:
+	go build -o $(BIN_DIR)/dispatcher $(CMD_DIR)/dispatcher
 
-test:
-	go test ./... -v
-.PHONY: lint fmt
+## Run local binaries
+run-webhook:
+	$(BIN_DIR)/webhook
 
-lint:
-	golangci-lint run
+run-dispatcher:
+	$(BIN_DIR)/dispatcher
 
+## Format code
 fmt:
 	gofumpt -w .
 	goimports -w .
 	golines --max-len=100 -w .
 
+## Linting
+lint:
+	golangci-lint run
+
+## Test
+test:
+	go test ./... -v
+
 clean:
-	rm -rf bin/
+	rm -rf $(BIN_DIR)

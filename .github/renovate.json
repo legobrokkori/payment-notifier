@@ -1,1 +1,9 @@
-// TODO: implement
+{
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["golines", "gofumpt", "goimports", "golangci-lint"],
+      "groupName": "Go tools",
+      "enabled": true
+    }
+  ]
+}

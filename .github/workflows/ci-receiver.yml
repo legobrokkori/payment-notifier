@@ -14,6 +14,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: payment-receiver
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,45 +26,35 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: payment-receiver/go.mod
-          cache: false # 明示的に無効化
+          cache: false
 
-      - name: Set up Go environment variables
-        run: echo "GOBIN=${{ github.workspace }}/bin" >> $GITHUB_ENV
-
-      - name: Cache Go modules and tools
+      - name: Cache Go modules
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-            ${{ github.workspace }}/bin
           key: go-cache-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            go-cache-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: go mod download
-        working-directory: payment-receiver
+          restore-keys: go-cache-${{ runner.os }}-
 
       - name: Install tools
         run: |
-          go install github.com/segmentio/golines@latest
-          go install golang.org/x/tools/cmd/goimports@latest
-          go install mvdan.cc/gofumpt@latest
+          go install github.com/segmentio/golines@v0.10.0
+          go install golang.org/x/tools/cmd/goimports@v0.20.0
+          go install mvdan.cc/gofumpt@v0.5.0
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
+          echo "$HOME/go/bin" >> $GITHUB_PATH
 
-      - name: Add tools to PATH
-        run: echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
+      - name: Run format check
+        run: make fmt
 
-      - name: Format check
+      - name: Lint
+        run: make lint
+
+      - name: Build webhook and dispatcher
         run: |
-          gofumpt -l . > gofumpt-diff.txt
-          goimports -l . > goimports-diff.txt
-          golines --max-len=100 -l . > golines-diff.txt
+          make build-webhook
+          make build-dispatcher
 
-          cat gofumpt-diff.txt goimports-diff.txt golines-diff.txt
-
-          if [ -s gofumpt-diff.txt ] || [ -s goimports-diff.txt ] || [ -s golines-diff.txt ]; then
-            echo "::error::Formatting issues found. Please run 'make fmt' and commit the changes."
-            exit 1
-          fi
-        working-directory: payment-receiver
+      - name: Run tests
+        run: make test
