@@ -1,19 +1,24 @@
-// Package main is the entrypoint of the payment-receiver service.
+// Package main is the entrypoint of the payment-receiver dispatcher.
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 
+	"payment-receiver/handler"
 	"payment-receiver/infrastructure"
 	"payment-receiver/usecase"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	ctx := context.Background()
+	// Set Gin to release mode unless otherwise specified
+	if os.Getenv("GIN_MODE") == "" {
+		_ = os.Setenv("GIN_MODE", "release")
+	}
 
-	// Postgres 接続
+	// Initialize postgres
 	dsn := os.Getenv("POSTGRES_DSN")
 	db, err := infrastructure.NewPostgres(dsn)
 	if err != nil {
@@ -25,25 +30,21 @@ func main() {
 		}
 	}()
 
-	// Outbox Repository 初期化
+	// Inject into usecase
 	outboxRepo := infrastructure.NewPostgresOutbox(db)
+	enqueuer := usecase.NewOutboxEnqueuer(outboxRepo)
 
-	// Redis キュー初期化（Outbox用）
-	redisQueue := infrastructure.NewRedisQueue(
-		os.Getenv("REDIS_ADDR"),
-		os.Getenv("REDIS_PASSWORD"),
-		"outbox-events",
-	)
+	// Set up Gin router
+	router := gin.Default()
+	router.POST("/webhook", handler.WebhookHandler(enqueuer))
 
-	// Dispatcher 構築
-	dispatcher := usecase.NewOutboxDispatcher(outboxRepo, redisQueue)
-
-	// 実行
-	log.Println("Running outbox dispatcher...")
-	if err := dispatcher.Dispatch(ctx, 10); err != nil {
-		log.Printf("dispatch error: %v", err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
-	// 一回だけ実行で終了（cronジョブ想定）
-	log.Println("Dispatcher finished.")
+	log.Printf("Starting webhook server on port %s...", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("failed to start server: %v", err)
+	}
 }

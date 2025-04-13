@@ -9,7 +9,20 @@ services:
     depends_on:
       - redis
       - postgres
+      - migrate
     environment:
       REDIS_ADDR: redis:6379
       REDIS_QUEUE: payment-events
       POSTGRES_DSN: postgres://user:password@postgres:5432/payment?sslmode=disable
+
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./payment-receiver/migrations:/migrations
+    command: [
+      "-path=/migrations",
+      "-database=postgres://user:password@postgres:5432/payment?sslmode=disable",
+      "up"
+    ]
+    depends_on:
+      - postgres
