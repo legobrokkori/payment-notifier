@@ -1,3 +1,4 @@
+// Package handler provides HTTP handler functions.
 package handler
 
 import (

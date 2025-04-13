@@ -1,3 +1,4 @@
+// Package infrastructure implements repository interfaces using concrete tools like Redis and Postgres.
 package infrastructure
 
 import (
@@ -13,12 +14,14 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// RedisQueue implements the Queue interface using Redis.
 type RedisQueue struct {
 	rdb     *redis.Client
 	queue   string
 	timeout time.Duration
 }
 
+// NewRedisQueue initializes a Redis-backed queue.
 func NewRedisQueue(addr, password, queueName string) *RedisQueue {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -33,6 +36,7 @@ func NewRedisQueue(addr, password, queueName string) *RedisQueue {
 	}
 }
 
+// Enqueue pushes the event to Redis as JSON.
 func (q *RedisQueue) Enqueue(ctx context.Context, event *domain.PaymentEvent) error {
 	jsonData, err := json.Marshal(event)
 	if err != nil {

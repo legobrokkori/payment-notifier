@@ -17,7 +17,7 @@ type mockQueue struct {
 	Event  *domain.PaymentEvent
 }
 
-func (m *mockQueue) Enqueue(ctx context.Context, event *domain.PaymentEvent) error {
+func (m *mockQueue) Enqueue(_ context.Context, event *domain.PaymentEvent) error {
 	m.Called = true
 	m.Event = event
 	return nil
