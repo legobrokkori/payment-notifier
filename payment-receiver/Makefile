@@ -13,9 +13,15 @@ run:
 
 test:
 	go test ./... -v
+.PHONY: lint fmt
 
 lint:
-	golangci-lint run --timeout=5m
+	golangci-lint run
+
+fmt:
+	gofumpt -w .
+	goimports -w .
+	golines --max-len=100 -w .
 
 clean:
 	rm -rf bin/

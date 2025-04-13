@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - 'payment-receiver/**'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/ci-receiver.yml'
   pull_request:
     paths:
       - 'payment-receiver/**'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/ci-receiver.yml'
 
 jobs:
   build-and-test:
@@ -22,18 +22,45 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: payment-receiver/go.mod
-          cache: true
+          cache: false # 明示的に無効化
 
-      - name: Lint
-        uses: golangci/golangci-lint-action@v3
+      - name: Set up Go environment variables
+        run: echo "GOBIN=${{ github.workspace }}/bin" >> $GITHUB_ENV
+
+      - name: Cache Go modules and tools
+        uses: actions/cache@v4
         with:
-          version: latest
-          working-directory: payment-receiver
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ${{ github.workspace }}/bin
+          key: go-cache-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-cache-${{ runner.os }}-
 
-      - name: Build
-        run: go build ./...
+      - name: Install dependencies
+        run: go mod download
         working-directory: payment-receiver
 
-      - name: Run tests
-        run: go test -v ./...
+      - name: Install tools
+        run: |
+          go install github.com/segmentio/golines@latest
+          go install golang.org/x/tools/cmd/goimports@latest
+          go install mvdan.cc/gofumpt@latest
+
+      - name: Add tools to PATH
+        run: echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
+
+      - name: Format check
+        run: |
+          gofumpt -l . > gofumpt-diff.txt
+          goimports -l . > goimports-diff.txt
+          golines --max-len=100 -l . > golines-diff.txt
+
+          cat gofumpt-diff.txt goimports-diff.txt golines-diff.txt
+
+          if [ -s gofumpt-diff.txt ] || [ -s goimports-diff.txt ] || [ -s golines-diff.txt ]; then
+            echo "::error::Formatting issues found. Please run 'make fmt' and commit the changes."
+            exit 1
+          fi
         working-directory: payment-receiver

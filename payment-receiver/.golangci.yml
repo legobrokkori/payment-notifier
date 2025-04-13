@@ -1,12 +1,12 @@
 run:
   timeout: 2m
   tests: true
-  skip-dirs:
+  exclude-dirs:
     - vendor
 
 output:
   formats:
-    - github-actions
+    - colored-line-number
 
 linters:
   enable:
@@ -29,10 +29,12 @@ linters-settings:
         severity: warning
 
 issues:
-  exclude-use-default: false
+  exclude-use-default: true
   max-issues-per-linter: 0
   max-same-issues: 0
   exclude-rules:
     - path: _test\.go
       linters:
         - errcheck
+        - revive
+      text: "unused-parameter"

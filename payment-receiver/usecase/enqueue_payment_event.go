@@ -3,16 +3,23 @@ package usecase
 
 import (
 	"context"
-	"log"
 
 	"payment-receiver/domain"
 )
 
-// EnqueuePaymentEvent sends a validated payment event to the queue.
+// PaymentQueue defines the interface to enqueue PaymentEvent into a queue.
+type PaymentQueue interface {
+	EnqueuePaymentEvent(ctx context.Context, event *domain.PaymentEvent) error
+}
+
+var paymentQueue PaymentQueue
+
+// InjectPaymentQueue sets the concrete implementation for PaymentQueue.
+func InjectPaymentQueue(q PaymentQueue) {
+	paymentQueue = q
+}
+
+// EnqueuePaymentEvent sends a payment event to the configured queue.
 func EnqueuePaymentEvent(event *domain.PaymentEvent) error {
-	if queue == nil {
-		log.Println("[WARN] No queue implementation injected, skipping enqueue")
-		return nil
-	}
-	return queue.Enqueue(context.Background(), event)
+	return paymentQueue.EnqueuePaymentEvent(context.Background(), event)
 }

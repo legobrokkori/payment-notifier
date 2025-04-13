@@ -4,24 +4,19 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"payment-receiver/domain"
-	"payment-receiver/repository"
 	"time"
-)
 
-// Queue defines the interface for enqueuing outbox events.
-type Queue interface {
-	Enqueue(ctx context.Context, event *domain.OutboxEvent) error
-}
+	"payment-receiver/repository"
+)
 
 // OutboxDispatcher processes pending outbox events and dispatches them to a queue.
 type OutboxDispatcher struct {
 	repo  repository.OutboxRepository
-	queue Queue
+	queue OutboxQueue
 }
 
 // NewOutboxDispatcher returns a new instance of OutboxDispatcher.
-func NewOutboxDispatcher(repo repository.OutboxRepository, queue Queue) *OutboxDispatcher {
+func NewOutboxDispatcher(repo repository.OutboxRepository, queue OutboxQueue) *OutboxDispatcher {
 	return &OutboxDispatcher{repo: repo, queue: queue}
 }
 

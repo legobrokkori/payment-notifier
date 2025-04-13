@@ -33,7 +33,10 @@ func (o *PostgresOutbox) Insert(ctx context.Context, event *domain.OutboxEvent) 
 }
 
 // FetchPending retrieves pending events up to a limit.
-func (o *PostgresOutbox) FetchPending(ctx context.Context, limit int) ([]*domain.OutboxEvent, error) {
+func (o *PostgresOutbox) FetchPending(
+	ctx context.Context,
+	limit int,
+) ([]*domain.OutboxEvent, error) {
 	rows, err := o.db.QueryContext(ctx, `
 		SELECT id, aggregate_id, event_type, payload, status, created_at, sent_at
 		FROM outbox_events

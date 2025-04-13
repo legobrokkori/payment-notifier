@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"payment-receiver/domain"
@@ -21,7 +20,11 @@ type RedisQueue struct {
 	timeout time.Duration
 }
 
-// NewRedisQueue initializes a Redis-backed queue.
+// Ensure RedisQueue implements the OutboxQueue interface at compile time.
+var _ usecase.OutboxQueue = (*RedisQueue)(nil)
+
+// NewRedisQueue creates and initializes a new RedisQueue instance.
+// It connects to Redis using the provided address, password, and queue name.
 func NewRedisQueue(addr, password, queueName string) *RedisQueue {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -36,31 +39,16 @@ func NewRedisQueue(addr, password, queueName string) *RedisQueue {
 	}
 }
 
-// Enqueue pushes the event to Redis as JSON.
-func (q *RedisQueue) Enqueue(ctx context.Context, event *domain.PaymentEvent) error {
-	jsonData, err := json.Marshal(event)
+// Enqueue serializes the given OutboxEvent as JSON and pushes it to the Redis queue.
+// This method sets a timeout to avoid hanging connections.
+func (q *RedisQueue) Enqueue(ctx context.Context, event *domain.OutboxEvent) error {
+	data, err := json.Marshal(event)
 	if err != nil {
-		return fmt.Errorf("failed to marshal event: %w", err)
+		return fmt.Errorf("failed to marshal outbox event: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, q.timeout)
 	defer cancel()
 
-	return q.rdb.RPush(ctx, q.queue, jsonData).Err()
-}
-
-// InitRedisAndInject sets up Redis and injects it to usecase layer
-func InitRedisAndInject() {
-	addr := os.Getenv("REDIS_ADDR")
-	if addr == "" {
-		addr = "localhost:6379"
-	}
-	password := os.Getenv("REDIS_PASSWORD")
-	queueName := os.Getenv("REDIS_QUEUE")
-	if queueName == "" {
-		queueName = "payment-events"
-	}
-
-	queue := NewRedisQueue(addr, password, queueName)
-	usecase.InjectQueue(queue)
+	return q.rdb.RPush(ctx, q.queue, data).Err()
 }
