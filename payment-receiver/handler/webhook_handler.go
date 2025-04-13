@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
@@ -43,11 +44,15 @@ func WebhookHandler(enqueuer usecase.OutboxEventSaver) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
 		if err := enqueuer.EnqueueOutboxEvent(c.Request.Context(), event); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to queue event"})
-			return
-		}
-		if err := enqueuer.EnqueueOutboxEvent(c.Request.Context(), event); err != nil {
+			if errors.Is(err, usecase.ErrDuplicateEvent) {
+				c.JSON(http.StatusOK, gin.H{
+					"status": "duplicate",
+					"note":   "event already accepted",
+				})
+				return
+			}
 			log.Printf("failed to insert to outbox: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to queue event"})
 			return
