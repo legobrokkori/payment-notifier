@@ -16,24 +16,27 @@ namespace PaymentProcessor.Application.Workers
             _repository = repository;
         }
 
-        // RunWorkerAsync: Processes messages from Redis in a loop
+        // RunWorkerAsync: Processes a limited number of messages from Redis.
+        // Designed for short-lived execution to stay within Render's free tier limits.
         public async Task RunWorkerAsync(CancellationToken cancellationToken)
         {
+
             Console.WriteLine("Worker started.");
-            while (!cancellationToken.IsCancellationRequested)
+
+            int maxMessages = 100; // TODO: Move this to configuration (e.g., environment variable)
+            int processed = 0;
+
+            while (!cancellationToken.IsCancellationRequested && processed < maxMessages)
             {
                 var paymentEvent = await _consumer.DequeueAsync(cancellationToken);
-                if (paymentEvent == null)
-                {
-                    await Task.Delay(100, cancellationToken); // backoff
-                    continue;
-                }
+
+                // Stop processing if no more messages are available in the queue.
+                // This prevents the loop from running unnecessarily, helping Render auto-sleep the service.
+                if (paymentEvent == null) break;
 
                 Console.WriteLine($"Processing event: {paymentEvent.Id}");
-
-                // TODO: validation, transformation etc.
-
                 await _repository.SaveAsync(paymentEvent, cancellationToken);
+                processed++;
             }
         }
     }
