@@ -7,36 +7,33 @@ public class PaymentEvent
     public string Currency { get; set; } = default!;
     public string Method { get; set; } = default!;
     public string Status { get; set; } = default!;
-    public DateTime OccurredAt { get; set; }
+    public DateTimeOffset EventAt { get; set; }
 
-    public PaymentEvent(string id, int amount, string currency, string method, string status, DateTime occurredAt)
+    private static readonly string[] ValidStatuses = { "paid", "failed", "cancelled" };
+
+    public PaymentEvent(string id, int amount, string currency, string method, string status, string eventAt)
     {
-        if (string.IsNullOrWhiteSpace(id))
-            throw new ArgumentException("Id is required.", nameof(id));
+        if (string.IsNullOrWhiteSpace(id) || amount <= 0 || string.IsNullOrWhiteSpace(currency) ||
+            string.IsNullOrWhiteSpace(method) || string.IsNullOrWhiteSpace(status) || string.IsNullOrWhiteSpace(eventAt))
+        {
+            throw new ArgumentException("All fields are required.");
+        }
 
-        if (amount <= 0)
-            throw new ArgumentException("Amount must be greater than 0.", nameof(amount));
+        if (!ValidStatuses.Contains(status))
+        {
+            throw new ArgumentException("Invalid status.");
+        }
 
-        if (string.IsNullOrWhiteSpace(currency))
-            throw new ArgumentException("Currency is required.", nameof(currency));
-
-        if (string.IsNullOrWhiteSpace(method))
-            throw new ArgumentException("Method is required.", nameof(method));
-
-        if (!IsValidStatus(status))
-            throw new ArgumentException($"Invalid status: {status}", nameof(status));
+        if (!DateTimeOffset.TryParse(eventAt, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsedOffset))
+        {
+            throw new ArgumentException("Invalid eventAt format.");
+        }
 
         Id = id;
         Amount = amount;
         Currency = currency;
         Method = method;
         Status = status;
-        OccurredAt = occurredAt;
-    }
-
-    private bool IsValidStatus(string status)
-    {
-        // Define valid statuses here
-        return new[] { "paid", "failed", "cancelled" }.Contains(status.ToLowerInvariant());
+        EventAt = parsedOffset.UtcDateTime;
     }
 }
