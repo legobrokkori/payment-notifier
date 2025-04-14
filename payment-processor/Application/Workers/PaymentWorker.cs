@@ -1,7 +1,6 @@
-// Application/Workers/PaymentWorker.cs
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using PaymentProcessor.Domain.Interfaces;
 
 namespace PaymentProcessor.Application.Workers
@@ -9,18 +8,33 @@ namespace PaymentProcessor.Application.Workers
     public class PaymentWorker
     {
         private readonly IRedisConsumer _consumer;
-        private readonly ILogger<PaymentWorker> _logger;
+        private readonly IPaymentRepository _repository;
 
-        public PaymentWorker(IRedisConsumer consumer, ILogger<PaymentWorker> logger)
+        public PaymentWorker(IRedisConsumer consumer, IPaymentRepository repository)
         {
             _consumer = consumer;
-            _logger = logger;
+            _repository = repository;
         }
 
-        public async Task RunAsync(CancellationToken cancellationToken)
+        // RunWorkerAsync: Processes messages from Redis in a loop
+        public async Task RunWorkerAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Starting payment worker...");
-            await _consumer.ConsumeAsync(cancellationToken);
+            Console.WriteLine("Worker started.");
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var paymentEvent = await _consumer.DequeueAsync(cancellationToken);
+                if (paymentEvent == null)
+                {
+                    await Task.Delay(100, cancellationToken); // backoff
+                    continue;
+                }
+
+                Console.WriteLine($"Processing event: {paymentEvent.Id}");
+
+                // TODO: validation, transformation etc.
+
+                await _repository.SaveAsync(paymentEvent, cancellationToken);
+            }
         }
     }
 }
