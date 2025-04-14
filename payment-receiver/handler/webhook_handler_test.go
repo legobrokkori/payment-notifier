@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,6 +29,11 @@ func (m *mockOutboxEnqueuer) EnqueueOutboxEvent(ctx context.Context, event *doma
 	m.called = true
 	m.event = event
 	return m.err
+}
+
+func mustParse(s string) time.Time {
+	t, _ := time.Parse(time.RFC3339, s)
+	return t
 }
 
 func TestWebhookHandler_Success(t *testing.T) {
@@ -62,9 +69,112 @@ func TestWebhookHandler_Success(t *testing.T) {
 	assert.Equal(t, mustParse("2024-04-01T12:00:00Z"), mock.event.OccurredAt)
 }
 
-func mustParse(s string) time.Time {
-	t, _ := time.Parse(time.RFC3339, s)
-	return t
+func TestWebhookHandler_InvalidJSON(t *testing.T) {
+	router := gin.Default()
+	router.POST("/webhook", handler.WebhookHandler(&mockOutboxEnqueuer{}))
+
+	req := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{invalid json"))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "invalid payload")
+}
+
+func TestWebhookHandler_MissingField(t *testing.T) {
+	router := gin.Default()
+	router.POST("/webhook", handler.WebhookHandler(&mockOutboxEnqueuer{}))
+
+	body := map[string]interface{}{
+		"id": "evt_001",
+	}
+	jsonBody, _ := json.Marshal(body)
+
+	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "invalid payload")
+}
+
+func TestWebhookHandler_InvalidOccurredAtFormat(t *testing.T) {
+	router := gin.Default()
+	router.POST("/webhook", handler.WebhookHandler(&mockOutboxEnqueuer{}))
+
+	body := map[string]interface{}{
+		"id":          "evt_001",
+		"amount":      1200,
+		"currency":    "USD",
+		"method":      "card",
+		"status":      "paid",
+		"occurred_at": "not-a-date",
+	}
+	jsonBody, _ := json.Marshal(body)
+
+	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "invalid occurred_at format")
+}
+
+func TestWebhookHandler_InvalidStatus(t *testing.T) {
+	router := gin.Default()
+	router.POST("/webhook", handler.WebhookHandler(&mockOutboxEnqueuer{}))
+
+	body := map[string]interface{}{
+		"id":          "evt_001",
+		"amount":      1200,
+		"currency":    "USD",
+		"method":      "card",
+		"status":      "unknown",
+		"occurred_at": "2024-04-01T12:00:00Z",
+	}
+	jsonBody, _ := json.Marshal(body)
+
+	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "invalid status")
+}
+
+func TestWebhookHandler_InternalError(t *testing.T) {
+	router := gin.Default()
+	mock := &mockOutboxEnqueuer{
+		err: errors.New("unexpected error"),
+	}
+	router.POST("/webhook", handler.WebhookHandler(mock))
+
+	body := map[string]interface{}{
+		"id":          "evt_001",
+		"amount":      1200,
+		"currency":    "USD",
+		"method":      "card",
+		"status":      "paid",
+		"occurred_at": "2024-04-01T12:00:00Z",
+	}
+	jsonBody, _ := json.Marshal(body)
+
+	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "failed to queue event")
 }
 
 func TestWebhookHandler_Duplicate(t *testing.T) {

@@ -30,6 +30,25 @@ func setupTestDB(t *testing.T) *sql.DB {
 	return db
 }
 
+func TestInsert_Success(t *testing.T) {
+	db := setupTestDB(t)
+	repo := infrastructure.NewPostgresOutbox(db)
+
+	ctx := context.Background()
+	event := &domain.OutboxEvent{
+		ID:          uuid.New(),
+		AggregateID: "evt_success_001",
+		EventType:   "payment_event",
+		Payload:     []byte(`{"id":"evt_success_001"}`),
+		Status:      domain.StatusPending,
+		CreatedAt:   time.Now(),
+		EventAt:     time.Now(),
+	}
+
+	err := repo.Insert(ctx, event)
+	assert.NoError(t, err)
+}
+
 func TestInsert_DuplicateAggregateID(t *testing.T) {
 	db := setupTestDB(t)
 	repo := infrastructure.NewPostgresOutbox(db)
