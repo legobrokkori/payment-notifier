@@ -1,6 +1,11 @@
-namespace PaymentProcessor.Domain.Interfaces;
+using System.Threading;
+using System.Threading.Tasks;
+using PaymentProcessor.Domain.Entities;
 
-public interface IRedisConsumer
+namespace PaymentProcessor.Domain.Interfaces
 {
-    Task ConsumeAsync(CancellationToken cancellationToken);
+    public interface IRedisConsumer
+    {
+        Task<PaymentEvent?> DequeueAsync(CancellationToken cancellationToken);
+    }
 }
