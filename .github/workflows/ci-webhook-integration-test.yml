@@ -9,6 +9,8 @@ on:
     paths:
       - 'payment-receiver/**'
       - '.github/workflows/ci-webhook-integration-test.yml'
+env:
+  POSTGRES_DSN: postgres://user:password@localhost:5432/payment?sslmode=disable
 
 jobs:
   integration-test:
