@@ -1,18 +1,17 @@
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
+using PaymentProcessor.Application.Workers;
+using PaymentProcessor.Domain.Interfaces;
+using PaymentProcessor.Infrastructure.Persistence;
+using PaymentProcessor.Infrastructure.Redis;
 
-Console.WriteLine("Starting Payment Processor...");
 
 var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) =>
+    .ConfigureServices((_, services) =>
     {
+        services.AddSingleton<IRedisConsumer, RedisConsumer>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddHostedService<PaymentWorker>();
-    })
-    .ConfigureLogging(logging =>
-    {
-        logging.ClearProviders();
-        logging.AddConsole();
     })
     .Build();
 
