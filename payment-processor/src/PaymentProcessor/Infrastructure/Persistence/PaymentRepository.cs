@@ -1,5 +1,4 @@
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using PaymentProcessor.Domain.Entities;
 using PaymentProcessor.Domain.Interfaces;
 
@@ -7,10 +6,19 @@ namespace PaymentProcessor.Infrastructure.Persistence
 {
     public class PaymentRepository : IPaymentRepository
     {
-        public Task SaveAsync(PaymentEvent payment, CancellationToken cancellationToken)
+        private readonly AppDbContext _db;
+
+        public PaymentRepository(AppDbContext db)
         {
-            // TODO: Implement EF-based persistence later
-            return Task.CompletedTask;
+            _db = db;
         }
+
+        public async Task SaveAsync(PaymentEvent paymentEvent, CancellationToken cancellationToken)
+        {
+            // Insert the event
+            _db.PaymentEvents.Add(paymentEvent);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
     }
 }
