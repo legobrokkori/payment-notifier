@@ -1,1 +1,32 @@
-// TODO: implement
+root = true
+
+# C# files
+[*.cs]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+
+# Using directives
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Code style
+csharp_new_line_before_open_brace = all
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+csharp_style_expression_bodied_methods = true:suggestion
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_prefer_braces = true:suggestion
+csharp_indent_case_contents = true
+
+# StyleCop: disable verbose comments
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1604.severity = none
+dotnet_diagnostic.SA1609.severity = none
+dotnet_diagnostic.SA1633.severity = none
+
+# Misc
+dotnet_diagnostic.SA1122.severity = none
+dotnet_diagnostic.SA1201.severity = suggestion
