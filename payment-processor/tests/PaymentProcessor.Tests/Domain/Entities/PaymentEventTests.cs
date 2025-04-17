@@ -1,51 +1,66 @@
-using System;
-using FluentAssertions;
-using PaymentProcessor.Domain.Entities;
-using Xunit;
+// <copyright file="PaymentEventTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
-namespace PaymentProcessor.Tests.Domain.Entities;
-
-public class PaymentEventTests
+namespace PaymentProcessor.Tests.Domain.Entities
 {
-    [Fact]
-    public void Constructor_Should_Throw_When_Required_Field_Is_Missing()
-    {
-        Action act = () => new PaymentEvent("", 1000, "USD", "card", "paid", "2024-04-01T10:00:00Z");
-        act.Should().Throw<ArgumentException>().WithMessage("*required*");
-    }
+    using System;
+    using FluentAssertions;
+    using PaymentProcessor.Domain.Entities;
+    using Xunit;
 
-    [Fact]
-    public void Constructor_Should_Throw_When_Invalid_Date_Format()
+    /// <summary>
+    /// Unit tests for the <see cref="PaymentEvent"/> entity.
+    /// </summary>
+    public class PaymentEventTests
     {
-        Action act = () => new PaymentEvent("evt_001", 1000, "USD", "card", "paid", "not-a-date");
-        act.Should().Throw<ArgumentException>().WithMessage("*eventAt format*");
-    }
+        /// <summary>
+        /// Should throw an exception when required fields are missing.
+        /// </summary>
+        [Fact]
+        public void Constructor_Should_Throw_When_Fields_Are_Missing()
+        {
+            Action act = () => new PaymentEvent(string.Empty, 0, string.Empty, string.Empty, string.Empty, "2024-04-01T00:00:00Z");
 
-    [Fact]
-    public void Constructor_Should_Throw_When_Invalid_Status()
-    {
-        Action act = () => new PaymentEvent("evt_001", 1000, "USD", "card", "unknown", "2024-04-01T10:00:00Z");
-        act.Should().Throw<ArgumentException>().WithMessage("*Invalid status*");
-    }
+            act.Should().Throw<ArgumentException>().WithMessage("All fields are required.");
+        }
 
-    [Fact]
-    public void Constructor_Should_Succeed_With_Valid_Input()
-    {
-        var evt = new PaymentEvent("evt_001", 1000, "USD", "card", "paid", "2024-04-01T10:00:00Z");
-        evt.Id.Should().Be("evt_001");
-        evt.Amount.Should().Be(1000);
-        evt.Currency.Should().Be("USD");
-        evt.Method.Should().Be("card");
-        evt.Status.Should().Be("paid");
-        evt.EventAt.Should().Be(DateTime.Parse("2024-04-01T10:00:00Z"));
-    }
+        /// <summary>
+        /// Should throw an exception when the status is invalid.
+        /// </summary>
+        [Fact]
+        public void Constructor_Should_Throw_When_Status_Is_Invalid()
+        {
+            Action act = () => new PaymentEvent("abc", 1000, "USD", "card", "invalid", "2024-04-01T00:00:00Z");
 
-    [Fact]
-    public void Constructor_Should_Convert_EventAt_To_Utc()
-    {
-        var input = "2024-04-01T19:00:00+09:00";
-        var evt = new PaymentEvent("evt_001", 1200, "JPY", "card", "paid", input);
+            act.Should().Throw<ArgumentException>().WithMessage("Invalid status.");
+        }
 
-        evt.EventAt.Should().Be(new DateTime(2024, 4, 1, 10, 0, 0, DateTimeKind.Utc));
+        /// <summary>
+        /// Should throw an exception when eventAt format is invalid.
+        /// </summary>
+        [Fact]
+        public void Constructor_Should_Throw_When_EventAt_Is_Invalid_Format()
+        {
+            Action act = () => new PaymentEvent("abc", 1000, "USD", "card", "succeeded", "invalid-timestamp");
+
+            act.Should().Throw<ArgumentException>().WithMessage("Invalid eventAt format.");
+        }
+
+        /// <summary>
+        /// Should create the event successfully when all inputs are valid.
+        /// </summary>
+        [Fact]
+        public void Constructor_Should_Succeed_With_Valid_Input()
+        {
+            var evt = new PaymentEvent("abc", 1000, "USD", "card", "succeeded", "2024-04-01T19:00:00+09:00");
+
+            evt.Id.Should().Be("abc");
+            evt.Amount.Should().Be(1000);
+            evt.Currency.Should().Be("USD");
+            evt.Method.Should().Be("card");
+            evt.Status.Should().Be("succeeded");
+            evt.EventAt.UtcDateTime.Should().Be(DateTime.Parse("2024-04-01T10:00:00Z"));
+        }
     }
 }
