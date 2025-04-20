@@ -1,16 +1,29 @@
+// <copyright file="Program.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
+
 using PaymentProcessor.Application.Workers;
 using PaymentProcessor.Domain.Interfaces;
 using PaymentProcessor.Infrastructure.Configurations;
 using PaymentProcessor.Infrastructure.Persistence;
 using PaymentProcessor.Infrastructure.Redis;
 
-class Program
+/// <summary>
+/// Entry point of the PaymentProcessor application. Configures and runs the worker to process payment events.
+/// </summary>
+internal class Program
 {
+    /// <summary>
+    /// Application entry point. Sets up configuration, DI container, and executes the background worker.
+    /// </summary>
+    /// <param name="args">Command-line arguments passed to the application.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public static async Task Main(string[] args)
     {
         var host = Host.CreateDefaultBuilder(args)
@@ -39,8 +52,9 @@ class Program
 
                 // EF DbContext
                 var dbSettings = configuration.GetSection("Database").Get<DatabaseSettings>();
+                var wrappedDbSettings = dbSettings ?? throw new InvalidOperationException("dbSettings is null.");
                 services.AddDbContext<AppDbContext>(options =>
-                    options.UseNpgsql(dbSettings.ConnectionString));
+                    options.UseNpgsql(wrappedDbSettings.ConnectionString));
 
                 // Worker
                 services.AddScoped<PaymentWorker>();

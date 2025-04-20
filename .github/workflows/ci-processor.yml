@@ -27,8 +27,12 @@ jobs:
         run: dotnet restore
         working-directory: payment-processor
 
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
+      - name: Run code format check
+        run: dotnet format --verify-no-changes --verbosity diagnostic
+        working-directory: payment-processor
+
+      - name: Build with analyzers
+        run: dotnet build --no-restore -warnaserror
         working-directory: payment-processor
 
       - name: Run tests
