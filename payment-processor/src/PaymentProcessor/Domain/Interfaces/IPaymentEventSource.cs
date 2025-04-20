@@ -1,4 +1,4 @@
-// <copyright file="IRedisConsumer.cs" company="PlaceholderCompany">
+// <copyright file="IPaymentEventSource.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
@@ -12,7 +12,7 @@ namespace PaymentProcessor.Domain.Interfaces
     /// <summary>
     /// Defines a contract for consuming payment events from a Redis queue.
     /// </summary>
-    public interface IRedisConsumer
+    public interface IPaymentEventSource
     {
         /// <summary>
         /// Dequeues the next <see cref="PaymentEvent"/> from Redis.

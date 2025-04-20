@@ -47,7 +47,7 @@ internal class Program
                 services.AddLogging(logging => logging.AddConsole());
 
                 // Redis & Repository
-                services.AddSingleton<IRedisConsumer, RedisConsumer>();
+                services.AddSingleton<IPaymentEventSource, RedisPaymentEventSource>();
                 services.AddScoped<IPaymentRepository, PaymentRepository>();
 
                 // EF DbContext
