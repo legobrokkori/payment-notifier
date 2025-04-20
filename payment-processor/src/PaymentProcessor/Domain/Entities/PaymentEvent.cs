@@ -12,74 +12,59 @@ namespace PaymentProcessor.Domain.Entities
     public class PaymentEvent
     {
         /// <summary>
-        /// Valid status values for a payment event.
-        /// </summary>
-        private static readonly string[] ValidStatuses = { "paid", "failed", "cancelled" };
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="PaymentEvent"/> class.
+        /// This constructor is internal and should only be used by the factory.
         /// </summary>
         /// <param name="id">The unique identifier of the event.</param>
         /// <param name="amount">The payment amount.</param>
-        /// <param name="currency">The payment currency.</param>
-        /// <param name="method">The method of payment.</param>
+        /// <param name="currency">The currency of the payment.</param>
+        /// <param name="method">The payment method.</param>
         /// <param name="status">The payment status.</param>
-        /// <param name="eventAt">The event timestamp in ISO 8601 format.</param>
-        /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
-        public PaymentEvent(string id, int amount, string currency, string method, string status, string eventAt)
+        /// <param name="eventAt">The event timestamp (UTC).</param>
+        internal PaymentEvent(
+            string id,
+            int amount,
+            string currency,
+            string method,
+            string status,
+            DateTimeOffset eventAt)
         {
-            if (string.IsNullOrWhiteSpace(id) || amount <= 0 || string.IsNullOrWhiteSpace(currency) ||
-                string.IsNullOrWhiteSpace(method) || string.IsNullOrWhiteSpace(status) || string.IsNullOrWhiteSpace(eventAt))
-            {
-                throw new ArgumentException("All fields are required.");
-            }
-
-            if (!ValidStatuses.Contains(status))
-            {
-                throw new ArgumentException("Invalid status.");
-            }
-
-            if (!DateTimeOffset.TryParse(eventAt, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsedOffset))
-            {
-                throw new ArgumentException("Invalid eventAt format.");
-            }
-
             this.Id = id;
             this.Amount = amount;
             this.Currency = currency;
             this.Method = method;
             this.Status = status;
-            this.EventAt = parsedOffset.UtcDateTime;
+            this.EventAt = eventAt;
         }
 
         /// <summary>
-        /// Gets or sets the unique identifier for the payment event.
+        /// Gets the unique identifier for the payment event.
         /// </summary>
-        public string Id { get; set; } = default!;
+        public string Id { get; }
 
         /// <summary>
-        /// Gets or sets the amount associated with the payment.
+        /// Gets the amount associated with the payment.
         /// </summary>
-        public int Amount { get; set; }
+        public int Amount { get; }
 
         /// <summary>
-        /// Gets or sets the currency of the payment.
+        /// Gets the currency of the payment.
         /// </summary>
-        public string Currency { get; set; } = default!;
+        public string Currency { get; }
 
         /// <summary>
-        /// Gets or sets the payment method (e.g., credit_card, paypal).
+        /// Gets the payment method (e.g., credit_card, paypal).
         /// </summary>
-        public string Method { get; set; } = default!;
+        public string Method { get; }
 
         /// <summary>
-        /// Gets or sets the status of the payment (e.g., paid, failed).
+        /// Gets the status of the payment (e.g., paid, failed).
         /// </summary>
-        public string Status { get; set; } = default!;
+        public string Status { get; }
 
         /// <summary>
-        /// Gets or sets the UTC timestamp indicating when the payment event occurred.
+        /// Gets the UTC timestamp indicating when the payment event occurred.
         /// </summary>
-        public DateTimeOffset EventAt { get; set; }
+        public DateTimeOffset EventAt { get; }
     }
 }
