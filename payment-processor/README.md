@@ -25,7 +25,7 @@ payment-processor/
 │   ├── Entities/Payment.cs
 │   └── Interfaces/IPaymentRepository.cs
 ├── Infrastructure/                  # Adapters for Redis and database
-│   ├── Redis/RedisConsumer.cs
+│   ├── Redis/RedisPaymentEventSource.cs
 │   └── Persistence/PaymentRepository.cs
 ├── Tests/                            # Unit/integration tests
 

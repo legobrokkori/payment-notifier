@@ -1,4 +1,4 @@
-// <copyright file="RedisConsumer.cs" company="PlaceholderCompany">
+// <copyright file="RedisPaymentEventSource.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
@@ -16,9 +16,9 @@ namespace PaymentProcessor.Infrastructure.Redis
     using PaymentProcessor.Infrastructure.Configurations;
 
     /// <summary>
-    /// RedisConsumer is responsible for dequeuing payment events from the Redis queue.
+    /// RedisPaymentEventSource is responsible for dequeuing payment events from the Redis queue.
     /// </summary>
-    public class RedisConsumer : IRedisConsumer
+    public class RedisPaymentEventSource : IPaymentEventSource
     {
         /// <summary>
         /// Gets the configured Redis settings.
@@ -28,14 +28,14 @@ namespace PaymentProcessor.Infrastructure.Redis
         /// <summary>
         /// Gets the logger instance.
         /// </summary>
-        private readonly ILogger<RedisConsumer> logger;
+        private readonly ILogger<RedisPaymentEventSource> logger;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RedisConsumer"/> class.
+        /// Initializes a new instance of the <see cref="RedisPaymentEventSource"/> class.
         /// </summary>
         /// <param name="options">The Redis configuration options.</param>
         /// <param name="logger">The logger instance.</param>
-        public RedisConsumer(IOptions<RedisSettings> options, ILogger<RedisConsumer> logger)
+        public RedisPaymentEventSource(IOptions<RedisSettings> options, ILogger<RedisPaymentEventSource> logger)
         {
             this.settings = options.Value;
             this.logger = logger;

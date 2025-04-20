@@ -15,7 +15,7 @@ namespace PaymentProcessor.Application.Workers
     /// </summary>
     public class PaymentWorker
     {
-        private readonly IRedisConsumer consumer;
+        private readonly IPaymentEventSource consumer;
         private readonly IPaymentRepository repository;
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace PaymentProcessor.Application.Workers
         /// </summary>
         /// <param name="consumer">The Redis consumer responsible for dequeuing payment events.</param>
         /// <param name="repository">The repository for persisting payment events to the database.</param>
-        public PaymentWorker(IRedisConsumer consumer, IPaymentRepository repository)
+        public PaymentWorker(IPaymentEventSource consumer, IPaymentRepository repository)
         {
             this.consumer = consumer;
             this.repository = repository;
