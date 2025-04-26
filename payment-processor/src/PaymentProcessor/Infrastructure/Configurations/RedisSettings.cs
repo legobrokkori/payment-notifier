@@ -17,11 +17,23 @@ namespace PaymentProcessor.Infrastructure.Configurations
         /// <summary>
         /// Gets or sets the port number used to connect to the Redis server.
         /// </summary>
-        public int Port { get; set; }
+        required public int Port { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the Redis queue to consume messages from.
         /// </summary>
         required public string Queue { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Redis Stream consumer group name.
+        /// This group is used by StreamReadGroup and StreamAcknowledge
+        /// to manage message consumption and delivery tracking.
+        /// </summary>
+        required public string Group { get; set; } = "payment-group";
+
+        /// <summary>
+        /// Gets or sets the maximum number of entries to read from the stream at once.
+        /// </summary>
+        required public int ReadCount { get; set; } = 1; // Default to 1 for safety
     }
 }
