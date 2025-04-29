@@ -15,11 +15,11 @@ test:
 
 # Run format check (verify no changes)
 format-check:
-	dotnet format $(SLN) --verify-no-changes --verbosity diagnostic
+	dotnet format $(SLN) --verify-no-changes --verbosity diagnostic --exclude src/PaymentProcessor/Infrastructure/Persistence/Migrations
 
 # Auto-format all files
 format:
-	dotnet format $(SLN)
+	dotnet format $(SLN) --exclude src/PaymentProcessor/Infrastructure/Persistence/Migrations
 
 # Lint (treat all warnings as errors)
 lint:

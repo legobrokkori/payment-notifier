@@ -30,6 +30,10 @@ dotnet_diagnostic.SA1633.severity = none
 dotnet_diagnostic.SA1000.severity = none
 dotnet_diagnostic.SA1118.severity = none
 
+[src/PaymentProcessor/Infrastructure/Persistence/Migrations/*.cs]
+dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1413.severity = none
+
 # Misc
 dotnet_diagnostic.SA1122.severity = none
 dotnet_diagnostic.SA1201.severity = suggestion

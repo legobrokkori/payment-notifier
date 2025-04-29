@@ -8,6 +8,7 @@ namespace PaymentProcessor.Infrastructure.Persistence
 
     using PaymentProcessor.Domain.Entities;
     using PaymentProcessor.Domain.Interfaces;
+    using PaymentProcessor.Infrastructure.Persistence.Entities.Payment;
 
     /// <summary>
     /// Provides persistence operations for <see cref="PaymentEvent"/> entities using Entity Framework.
@@ -33,7 +34,17 @@ namespace PaymentProcessor.Infrastructure.Persistence
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SaveAsync(PaymentEvent paymentEvent, CancellationToken cancellationToken)
         {
-            this.db.PaymentEvents.Add(paymentEvent);
+            var record = new PaymentEventRecord
+            {
+                EventId = paymentEvent.Id,
+                Amount = paymentEvent.Amount,
+                Currency = paymentEvent.Currency,
+                Method = paymentEvent.Method,
+                Status = paymentEvent.Status,
+                EventAt = paymentEvent.EventAt,
+                CreatedAt = DateTimeOffset.UtcNow,
+            };
+            this.db.PaymentEventRecords.Add(record);
             await this.db.SaveChangesAsync(cancellationToken);
         }
     }
