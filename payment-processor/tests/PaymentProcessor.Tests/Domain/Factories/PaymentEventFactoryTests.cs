@@ -61,7 +61,7 @@ namespace PaymentProcessor.Tests.Domain.Factories
         [Fact]
         public void TryCreate_Should_Fail_When_Required_Fields_Are_Missing()
         {
-            var result = PaymentEventFactory.TryCreate("", 0, "", "", "", "");
+            var result = PaymentEventFactory.TryCreate(string.Empty, 0, string.Empty, string.Empty, string.Empty, string.Empty);
 
             result.IsSuccess.Should().BeFalse();
             result.Error.Should().Be("All fields are required.");

@@ -11,6 +11,20 @@ namespace PaymentProcessor.Domain.Shared
     /// <typeparam name="T">The type of the successful result value.</typeparam>
     public class Result<T>
     {
+        private Result(T value)
+        {
+            this.IsSuccess = true;
+            this.Value = value;
+            this.Error = null;
+        }
+
+        private Result(string error)
+        {
+            this.IsSuccess = false;
+            this.Error = error;
+            this.Value = default;
+        }
+
         /// <summary>
         /// Gets a value indicating whether the operation was successful.
         /// </summary>
@@ -27,20 +41,6 @@ namespace PaymentProcessor.Domain.Shared
         /// This is null when <see cref="IsSuccess"/> is false.
         /// </summary>
         public T? Value { get; }
-
-        private Result(T value)
-        {
-            this.IsSuccess = true;
-            this.Value = value;
-            this.Error = null;
-        }
-
-        private Result(string error)
-        {
-            this.IsSuccess = false;
-            this.Error = error;
-            this.Value = default;
-        }
 
         /// <summary>
         /// Creates a successful result with the specified value.

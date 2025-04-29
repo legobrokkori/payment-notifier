@@ -28,7 +28,7 @@ jobs:
         working-directory: payment-processor
 
       - name: Run code format check
-        run: dotnet format --verify-no-changes --verbosity diagnostic
+        run: dotnet format --verify-no-changes --verbosity diagnostic --exclude src/PaymentProcessor/Infrastructure/Persistence/Migrations
         working-directory: payment-processor
 
       - name: Build with analyzers
