@@ -14,6 +14,24 @@ jobs:
   processor-ci:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: payment
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      CONNECTIONSTRING: Host=localhost;Port=5432;Username=user;Password=password;Database=payment
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,6 +45,13 @@ jobs:
         run: dotnet restore
         working-directory: payment-processor
 
+      - name: Install dotnet-ef CLI
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Apply EF Core migrations
+        run: dotnet ef database update --project payment-processor/src/PaymentProcessor/payment-processor.csproj
+        working-directory: ${{ github.workspace }}
+
       - name: Run code format check
         run: dotnet format --verify-no-changes --verbosity diagnostic --exclude src/PaymentProcessor/Infrastructure/Persistence/Migrations
         working-directory: payment-processor
@@ -37,4 +62,10 @@ jobs:
 
       - name: Run tests
         run: dotnet test --no-restore --verbosity normal
+        working-directory: payment-processor
+
+      - name: Run integration tests
+        run: |
+          echo "Using CONNECTIONSTRING: $CONNECTIONSTRING"
+          dotnet test tests/PaymentProcessor.IntegrationTests --no-restore --verbosity normal --logger "console;verbosity=detailed"
         working-directory: payment-processor

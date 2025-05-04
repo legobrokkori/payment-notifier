@@ -13,6 +13,13 @@ namespace PaymentProcessor.Domain.Entities
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="PaymentEvent"/> class.
+        /// </summary>
+        public PaymentEvent()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PaymentEvent"/> class.
         /// This constructor is internal and should only be used by the factory.
         /// </summary>
         /// <param name="id">The unique identifier of the event.</param>

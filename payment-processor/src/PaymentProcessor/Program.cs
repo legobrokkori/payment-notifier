@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using PaymentProcessor.Application.Services;
 using PaymentProcessor.Application.Workers;
 using PaymentProcessor.Domain.Interfaces;
 using PaymentProcessor.Infrastructure.BackgroundServices;
