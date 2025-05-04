@@ -5,7 +5,7 @@ namespace PaymentProcessor.Infrastructure.BackgroundServices
 
     using Microsoft.Extensions.Hosting;
 
-    using PaymentProcessor.Application.Services;
+    using PaymentProcessor.Application.Workers;
 
     /// <summary>
     /// Background service that continuously processes pending inbox events

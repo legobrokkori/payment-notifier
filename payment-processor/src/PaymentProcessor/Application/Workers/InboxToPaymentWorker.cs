@@ -2,7 +2,7 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace PaymentProcessor.Application.Services
+namespace PaymentProcessor.Application.Workers
 {
     using System;
     using System.Collections.Generic;
