@@ -7,63 +7,63 @@ namespace PaymentProcessor.Infrastructure.Persistence
     using Microsoft.EntityFrameworkCore;
 
     using PaymentProcessor.Domain.Events;
+    using PaymentProcessor.Domain.Interfaces;
     using PaymentProcessor.Infrastructure.Persistence.Entities.Inbox;
 
     /// <summary>
-    /// Provides operations to insert and update <see cref="InboxEvent"/> records in the database.
+    /// Repository responsible for handling operations on InboxEvent entities.
     /// </summary>
-    public class InboxEventRepository
+    public class InboxEventRepository : IInboxEventRepository
     {
-        private readonly AppDbContext db;
+        private readonly AppDbContext dbContext;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InboxEventRepository"/> class.
         /// </summary>
-        /// <param name="db">The application's database context.</param>
-        public InboxEventRepository(AppDbContext db)
+        /// <param name="dbContext">The application's database context.</param>
+        public InboxEventRepository(AppDbContext dbContext)
         {
-            this.db = db;
+            this.dbContext = dbContext;
         }
 
-        /// <summary>
-        /// Inserts a new inbox event into the database.
-        /// </summary>
-        /// <param name="eventId">The event ID (idempotency key).</param>
-        /// <param name="rawPayload">The raw event payload as JSON or serialized format.</param>
-        /// <param name="cancellationToken">The cancellation token for the async operation.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task InsertAsync(string eventId, string rawPayload, CancellationToken cancellationToken)
+        /// <inheritdoc/>
+        public async Task SaveAsync(InboxEvent inboxEvent, CancellationToken cancellationToken)
         {
-            var entity = new InboxEvent
-            {
-                EventId = eventId,
-                RawPayload = rawPayload,
-                Status = InboxEventStatus.Pending.ToString(),
-            };
-
-            this.db.InboxEvents.Add(entity);
-            await this.db.SaveChangesAsync(cancellationToken);
+            this.dbContext.InboxEvents.Add(inboxEvent);
+            await this.dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        /// <summary>
-        /// Updates the status of an existing inbox event.
-        /// </summary>
-        /// <param name="eventId">The event ID to update.</param>
-        /// <param name="newStatus">The new status to set.</param>
-        /// <param name="cancellationToken">The cancellation token for the async operation.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task UpdateStatusAsync(string eventId, InboxEventStatus newStatus, CancellationToken cancellationToken)
+        /// <inheritdoc/>
+        public async Task<IReadOnlyList<InboxEvent>> GetPendingEventsAsync(CancellationToken cancellationToken)
         {
-            var entity = await this.db.InboxEvents
-                .FirstOrDefaultAsync(e => e.EventId == eventId, cancellationToken);
+            return await this.dbContext.InboxEvents
+                .Where(e => e.Status == InboxEventStatus.Pending.ToString())
+                .OrderBy(e => e.CreatedAt)
+                .ToListAsync(cancellationToken);
+        }
 
-            if (entity is null)
+        /// <inheritdoc/>
+        public async Task MarkAsProcessedAsync(long id, CancellationToken cancellationToken)
+        {
+            var inbox = await this.dbContext.InboxEvents.FindAsync(new object[] { id }, cancellationToken);
+            if (inbox != null)
             {
-                throw new InvalidOperationException($"InboxEvent with EventId '{eventId}' not found.");
+                inbox.Status = InboxEventStatus.Completed.ToString();
+                await this.dbContext.SaveChangesAsync(cancellationToken);
             }
+        }
 
-            entity.Status = newStatus.ToString();
-            await this.db.SaveChangesAsync(cancellationToken);
+        /// <inheritdoc/>
+        public async Task MarkAsFailedAsync(long id, string reason, CancellationToken cancellationToken)
+        {
+            var inbox = await this.dbContext.InboxEvents.FindAsync(new object[] { id }, cancellationToken);
+            if (inbox != null)
+            {
+                inbox.Status = InboxEventStatus.Failed.ToString();
+
+                // inbox.FailureReason = reason;
+                await this.dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }
