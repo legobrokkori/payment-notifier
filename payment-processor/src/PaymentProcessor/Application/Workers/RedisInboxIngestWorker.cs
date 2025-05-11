@@ -72,7 +72,15 @@ namespace PaymentProcessor.Application.Workers
                     Status = InboxEventStatus.Pending.ToString(),
                 };
 
-                await this.inboxRepository.SaveAsync(inboxEvent, cancellationToken);
+                try
+                {
+                    await this.inboxRepository.TrySaveAsync(inboxEvent, cancellationToken);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("Duplicate EventId"))
+                {
+                    this.logger.LogWarning("Skipping duplicate event. EventId={EventId}", paymentEvent.Id);
+                    continue;
+                }
 
                 this.logger.LogInformation("Enqueued InboxEvent with EventId={EventId}", paymentEvent.Id);
                 processed++;

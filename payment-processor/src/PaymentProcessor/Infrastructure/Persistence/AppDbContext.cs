@@ -27,7 +27,7 @@ namespace PaymentProcessor.Infrastructure.Persistence
         /// <summary>
         /// Gets the Inbox Events table (used for implementing the Inbox Pattern).
         /// </summary>
-        public DbSet<InboxEvent> InboxEvents => this.Set<InboxEvent>();
+        public virtual DbSet<InboxEvent> InboxEvents => this.Set<InboxEvent>();
 
         /// <summary>
         /// Gets the Payment Event Records table (persistent storage for processed events).

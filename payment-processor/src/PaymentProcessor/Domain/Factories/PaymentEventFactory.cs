@@ -60,7 +60,15 @@ namespace PaymentProcessor.Domain.Factories
                 return Result<PaymentEvent>.Failure("Invalid eventAt format.");
             }
 
-            var entity = new PaymentEvent(id, amount, currency, method, status, parsedOffset.UtcDateTime);
+            var entity = new PaymentEvent
+            {
+                Id = id,
+                Amount = amount,
+                Currency = currency,
+                Method = method,
+                Status = status,
+                EventAt = parsedOffset.UtcDateTime,
+            };
             return Result<PaymentEvent>.Success(entity);
         }
     }
