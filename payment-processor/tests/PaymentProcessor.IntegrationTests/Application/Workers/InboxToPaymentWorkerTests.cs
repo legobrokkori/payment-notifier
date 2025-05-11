@@ -39,7 +39,7 @@ public class InboxToPaymentWorkerTests : IAsyncLifetime
             new InboxEvent
             {
                 EventId = "event-success",
-                RawPayload = @"{""id"":""abc"",""amount"":1000,""currency"":""USD"",""method"":""card"",""status"":""paid"",""eventAt"":""2024-04-01T10:00:00Z""}",
+                RawPayload = @"{""Id"":""abc"",""Amount"":1000,""Currency"":""USD"",""Method"":""card"",""Status"":""paid"",""EventAt"":""2024-04-01T10:00:00Z""}",
                 Status = InboxEventStatus.Pending.ToString(),
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow

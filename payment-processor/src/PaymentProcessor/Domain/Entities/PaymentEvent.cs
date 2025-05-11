@@ -47,31 +47,31 @@ namespace PaymentProcessor.Domain.Entities
         /// <summary>
         /// Gets the unique identifier for the payment event.
         /// </summary>
-        public string Id { get; }
+        required public string Id { get; init; }
 
         /// <summary>
         /// Gets the amount associated with the payment.
         /// </summary>
-        public int Amount { get; }
+        required public int Amount { get; init; }
 
         /// <summary>
         /// Gets the currency of the payment.
         /// </summary>
-        public string Currency { get; }
+        required public string Currency { get; init; }
 
         /// <summary>
         /// Gets the payment method (e.g., credit_card, paypal).
         /// </summary>
-        public string Method { get; }
+        required public string Method { get; init; }
 
         /// <summary>
         /// Gets the status of the payment (e.g., paid, failed).
         /// </summary>
-        public string Status { get; }
+        required public string Status { get; init; }
 
         /// <summary>
         /// Gets the UTC timestamp indicating when the payment event occurred.
         /// </summary>
-        public DateTimeOffset EventAt { get; }
+        required public DateTimeOffset EventAt { get; init; }
     }
 }

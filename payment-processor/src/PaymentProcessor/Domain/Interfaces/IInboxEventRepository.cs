@@ -17,6 +17,15 @@ namespace PaymentProcessor.Domain.Interfaces
         Task SaveAsync(InboxEvent inboxEvent, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Saves an inbox event only if it does not already exist.
+        /// Ensures idempotency by preventing duplicate inserts.
+        /// </summary>
+        /// <param name="inboxEvent">The inbox event entity to be persisted.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task TrySaveAsync(InboxEvent inboxEvent, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Returns all inbox events that are pending processing.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
