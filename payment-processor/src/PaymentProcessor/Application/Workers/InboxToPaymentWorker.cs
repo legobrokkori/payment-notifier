@@ -44,7 +44,7 @@ namespace PaymentProcessor.Application.Workers
         public async Task ProcessPendingEventsAsync(CancellationToken cancellationToken)
         {
             var pendingEvents = await this.dbContext.InboxEvents
-                .Where(e => e.Status == InboxEventStatus.Pending.ToString())
+                .Where(e => e.Status == InboxEventStatus.Pending)
                 .ToListAsync(cancellationToken);
 
             foreach (var inboxEvent in pendingEvents)
@@ -59,17 +59,17 @@ namespace PaymentProcessor.Application.Workers
                     if (paymentEvent == null)
                     {
                         this.logger.LogWarning("Failed to deserialize PaymentEvent. Marking as Failed. EventId={EventId}", inboxEvent.EventId);
-                        inboxEvent.Status = InboxEventStatus.Failed.ToString();
+                        inboxEvent.MarkAsFailed();
                         continue;
                     }
 
                     // TODO: Actually process the paymentEvent (e.g., business logic here)
-                    inboxEvent.Status = InboxEventStatus.Completed.ToString();
+                    inboxEvent.MarkAsCompleted();
                 }
                 catch (Exception ex)
                 {
                     this.logger.LogError(ex, "Error processing InboxEvent. Marking as Failed. EventId={EventId}", inboxEvent.EventId);
-                    inboxEvent.Status = InboxEventStatus.Failed.ToString();
+                    inboxEvent.MarkAsFailed();
                 }
             }
 

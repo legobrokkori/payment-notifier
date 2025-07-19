@@ -3,14 +3,15 @@ package infrastructure
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"payment-receiver/domain"
+	pb "payment-receiver/gen/proto" // Protobuf-generated Go code
 	"payment-receiver/usecase"
 
-	"github.com/redis/go-redis/v9"
+	redis "github.com/redis/go-redis/v9"
+	"google.golang.org/protobuf/proto"
 )
 
 // RedisQueue implements the Queue interface using Redis.
@@ -20,13 +21,9 @@ type RedisQueue struct {
 	timeout time.Duration
 }
 
-// Ensure RedisQueue implements both interfaces
-var (
-	_ usecase.OutboxQueue = (*RedisQueue)(nil)
-)
+var _ usecase.OutboxQueue = (*RedisQueue)(nil)
 
 // NewRedisQueue creates and initializes a new RedisQueue instance.
-// It connects to Redis using the provided address, password, and queue name.
 func NewRedisQueue(addr, password, queueName string) *RedisQueue {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -41,20 +38,27 @@ func NewRedisQueue(addr, password, queueName string) *RedisQueue {
 	}
 }
 
-// enqueueToRedis serializes the given event and pushes it to Redis.
-func (q *RedisQueue) enqueueToRedis(ctx context.Context, event interface{}) error {
-	data, err := json.Marshal(event)
-	if err != nil {
-		return fmt.Errorf("failed to marshal event: %w", err)
-	}
-
+// Enqueue serializes the event payload using Protobuf and sends it to Redis Stream.
+func (q *RedisQueue) Enqueue(ctx context.Context, event *domain.OutboxEvent) error {
 	ctx, cancel := context.WithTimeout(ctx, q.timeout)
 	defer cancel()
 
-	return q.rdb.RPush(ctx, q.queue, data).Err()
-}
+	// Unmarshal OutboxEvent.Payload into Protobuf model
+	var paymentEvent pb.PaymentEvent
+	if err := proto.Unmarshal(event.Payload, &paymentEvent); err != nil {
+		return fmt.Errorf("failed to unmarshal protobuf payload: %w", err)
+	}
 
-// Enqueue implements OutboxQueue interface.
-func (q *RedisQueue) Enqueue(ctx context.Context, event *domain.OutboxEvent) error {
-	return q.enqueueToRedis(ctx, event)
+	// Marshal back to binary protobuf for transport (optional, could use Payload as-is)
+	data, err := proto.Marshal(&paymentEvent)
+	if err != nil {
+		return fmt.Errorf("failed to marshal protobuf: %w", err)
+	}
+
+	return q.rdb.XAdd(ctx, &redis.XAddArgs{
+		Stream: q.queue,
+		Values: map[string]interface{}{
+			"data": data,
+		},
+	}).Err()
 }

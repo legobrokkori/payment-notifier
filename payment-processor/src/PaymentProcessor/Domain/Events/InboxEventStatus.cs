@@ -13,21 +13,21 @@ namespace PaymentProcessor.Domain.Events
         /// <summary>
         /// The event has been saved but not yet processed.
         /// </summary>
-        Pending = 0,
+        Pending,
 
         /// <summary>
         /// The event is currently being processed.
         /// </summary>
-        Processing = 1,
+        Processing,
 
         /// <summary>
         /// The event was processed successfully.
         /// </summary>
-        Completed = 2,
+        Completed,
 
         /// <summary>
         /// The event failed to process.
         /// </summary>
-        Failed = 3,
+        Failed,
     }
 }

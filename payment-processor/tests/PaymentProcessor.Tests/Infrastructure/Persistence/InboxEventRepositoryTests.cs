@@ -10,9 +10,10 @@ using Microsoft.Extensions.Logging;
 
 using Moq;
 
+using PaymentProcessor.Domain.Entities;
 using PaymentProcessor.Domain.Events;
 using PaymentProcessor.Infrastructure.Persistence;
-using PaymentProcessor.Infrastructure.Persistence.Entities.Inbox;
+using PaymentProcessor.Infrastructure.Persistence.Repositories;
 
 using Xunit;
 
@@ -29,9 +30,7 @@ public class InboxEventRepositoryTests
     {
         EventId = "event-123",
         RawPayload = "{}",
-        Status = InboxEventStatus.Pending.ToString(),
-        CreatedAt = DateTimeOffset.UtcNow,
-        UpdatedAt = DateTimeOffset.UtcNow,
+        CreatedAt = DateTime.UtcNow,
     };
 
     /// <summary>
@@ -43,8 +42,7 @@ public class InboxEventRepositoryTests
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        var loggerMock = new Mock<ILogger<InboxEventRepository>>();
-        var repo = new InboxEventRepository(dbContext, loggerMock.Object);
+        var repo = new InboxEventRepository(dbContext);
 
         // Insert event beforehand
         await dbContext.InboxEvents.AddAsync(this.sampleEvent);
@@ -67,8 +65,7 @@ public class InboxEventRepositoryTests
     {
         // Arrange
         using var dbContext = this.CreateInMemoryDbContext();
-        var loggerMock = new Mock<ILogger<InboxEventRepository>>();
-        var repo = new InboxEventRepository(dbContext, loggerMock.Object);
+        var repo = new InboxEventRepository(dbContext);
 
         await dbContext.InboxEvents.AddAsync(this.sampleEvent);
         await dbContext.SaveChangesAsync();

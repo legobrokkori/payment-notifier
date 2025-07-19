@@ -90,7 +90,10 @@ func (o *PostgresOutbox) MarkAsSent(ctx context.Context, id uuid.UUID) error {
 }
 
 // ExistsByAggregateID checks if an event with the given aggregate ID exists
-func (o *PostgresOutbox) ExistsByAggregateID(ctx context.Context, aggregateID string) (bool, error) {
+func (o *PostgresOutbox) ExistsByAggregateID(
+	ctx context.Context,
+	aggregateID string,
+) (bool, error) {
 	var exists bool
 	err := o.db.QueryRowContext(ctx, `
 		SELECT EXISTS (

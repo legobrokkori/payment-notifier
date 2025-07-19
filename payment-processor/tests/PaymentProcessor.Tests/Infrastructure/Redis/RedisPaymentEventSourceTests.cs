@@ -11,10 +11,14 @@ namespace PaymentProcessor.Tests.Infrastructure.Redis
 
     using FluentAssertions;
 
+    using Google.Protobuf;
+
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
     using Moq;
+
+    using Payment;
 
     using PaymentProcessor.Domain.Entities;
     using PaymentProcessor.Infrastructure.Configurations;
@@ -23,6 +27,8 @@ namespace PaymentProcessor.Tests.Infrastructure.Redis
     using StackExchange.Redis;
 
     using Xunit;
+
+    using ProtoPaymentEvent = Payment.PaymentEvent;
 
     /// <summary>
     /// Unit tests for <see cref="RedisPaymentEventSource"/>.
@@ -49,6 +55,7 @@ namespace PaymentProcessor.Tests.Infrastructure.Redis
                 Queue = "payment-events",
                 Group = "payment-group",
                 ReadCount = 1,
+                ConnectionString = "localhost:6379",
             };
             this.loggerMock = new();
             this.redisDbMock = new();
@@ -84,17 +91,20 @@ namespace PaymentProcessor.Tests.Infrastructure.Redis
         public async Task DequeueAsync_Should_Return_PaymentEvent_When_Valid()
         {
             // Arrange: A valid stream entry
+            var proto = new ProtoPaymentEvent
+            {
+                Id = "abc",
+                Amount = 1000,
+                Currency = "USD",
+                Method = "card",
+                Status = "paid",
+                OccurredAt = "2024-04-01T10:00:00Z",
+            };
+            var bytes = proto.ToByteArray();
+
             var entry = new StreamEntry(
                 "123-0",
-                new NameValueEntry[]
-                {
-                    new("id", "abc"),
-                    new("amount", "1000"),
-                    new("currency", "USD"),
-                    new("method", "card"),
-                    new("status", "paid"),
-                    new("eventAt", "2024-04-01T10:00:00Z"),
-                });
+                new[] { new NameValueEntry("data", bytes) }); // ← data フィールドだけ
 
             this.redisDbMock
                 .Setup(db => db.StreamReadGroupAsync(

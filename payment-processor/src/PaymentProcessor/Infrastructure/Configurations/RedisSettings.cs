@@ -35,5 +35,10 @@ namespace PaymentProcessor.Infrastructure.Configurations
         /// Gets or sets the maximum number of entries to read from the stream at once.
         /// </summary>
         required public int ReadCount { get; set; } = 1; // Default to 1 for safety
+
+        /// <summary>
+        /// Gets or sets the ConnectionString to read from the stream at once.
+        /// </summary>
+        required public string ConnectionString { get; set; } = string.Empty;
     }
 }

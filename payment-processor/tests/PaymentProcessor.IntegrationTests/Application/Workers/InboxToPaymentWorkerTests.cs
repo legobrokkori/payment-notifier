@@ -8,9 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using PaymentProcessor.Application.Workers;
+using PaymentProcessor.Domain.Entities;
 using PaymentProcessor.Domain.Events;
 using PaymentProcessor.Infrastructure.Persistence;
-using PaymentProcessor.Infrastructure.Persistence.Entities.Inbox;
 using PaymentProcessor.IntegrationTests.Infrastructure;
 
 using Xunit;
@@ -40,25 +40,19 @@ public class InboxToPaymentWorkerTests : IAsyncLifetime
             {
                 EventId = "event-success",
                 RawPayload = @"{""Id"":""abc"",""Amount"":1000,""Currency"":""USD"",""Method"":""card"",""Status"":""paid"",""EventAt"":""2024-04-01T10:00:00Z""}",
-                Status = InboxEventStatus.Pending.ToString(),
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                CreatedAt = DateTime.UtcNow
             },
             new InboxEvent
             {
                 EventId = "event-invalid-json",
                 RawPayload = @"{ this is not valid json }",
-                Status = InboxEventStatus.Pending.ToString(),
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                CreatedAt = DateTime.UtcNow
             },
             new InboxEvent
             {
                 EventId = "event-null-payload",
                 RawPayload = "null",
-                Status = InboxEventStatus.Pending.ToString(),
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                CreatedAt = DateTime.UtcNow
             }
         );
 
@@ -74,8 +68,8 @@ public class InboxToPaymentWorkerTests : IAsyncLifetime
         await worker.ProcessPendingEventsAsync(default);
 
         // Assert
-        dbContext.InboxEvents.First(e => e.EventId == "event-success").Status.Should().Be(InboxEventStatus.Completed.ToString());
-        dbContext.InboxEvents.First(e => e.EventId == "event-invalid-json").Status.Should().Be(InboxEventStatus.Failed.ToString());
-        dbContext.InboxEvents.First(e => e.EventId == "event-null-payload").Status.Should().Be(InboxEventStatus.Failed.ToString());
+        dbContext.InboxEvents.First(e => e.EventId == "event-success").Status.Should().Be(InboxEventStatus.Completed);
+        dbContext.InboxEvents.First(e => e.EventId == "event-invalid-json").Status.Should().Be(InboxEventStatus.Failed);
+        dbContext.InboxEvents.First(e => e.EventId == "event-null-payload").Status.Should().Be(InboxEventStatus.Failed);
     }
 }

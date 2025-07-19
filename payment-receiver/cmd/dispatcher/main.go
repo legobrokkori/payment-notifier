@@ -27,7 +27,7 @@ func main() {
 	queue := infrastructure.NewRedisQueue(
 		os.Getenv("REDIS_ADDR"),
 		os.Getenv("REDIS_PASSWORD"),
-		"outbox-events",
+		"payment-events",
 	)
 
 	// 4. Dispatcher 構築

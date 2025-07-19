@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"payment-receiver/domain"
 	"payment-receiver/handler"
@@ -21,19 +20,17 @@ import (
 
 type mockOutboxEnqueuer struct {
 	called bool
-	event  *domain.PaymentEvent
+	event  *domain.OutboxEvent
 	err    error
 }
 
-func (m *mockOutboxEnqueuer) EnqueueOutboxEvent(ctx context.Context, event *domain.PaymentEvent) error {
+func (m *mockOutboxEnqueuer) EnqueueOutboxEvent(
+	ctx context.Context,
+	event *domain.OutboxEvent,
+) error {
 	m.called = true
 	m.event = event
 	return m.err
-}
-
-func mustParse(s string) time.Time {
-	t, _ := time.Parse(time.RFC3339, s)
-	return t
 }
 
 func TestWebhookHandler_Success(t *testing.T) {
@@ -61,12 +58,8 @@ func TestWebhookHandler_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, w.Code)
 	assert.True(t, mock.called)
-	assert.Equal(t, "evt_001", mock.event.ID)
-	assert.Equal(t, 1200, mock.event.Amount)
-	assert.Equal(t, "USD", mock.event.Currency)
-	assert.Equal(t, "card", mock.event.Method)
-	assert.Equal(t, "paid", mock.event.Status)
-	assert.Equal(t, mustParse("2024-04-01T12:00:00Z"), mock.event.OccurredAt)
+	assert.Equal(t, "evt_001", mock.event.AggregateID)
+	assert.Equal(t, "payment_event", mock.event.EventType)
 }
 
 func TestWebhookHandler_InvalidJSON(t *testing.T) {

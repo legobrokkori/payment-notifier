@@ -5,9 +5,11 @@
 namespace PaymentProcessor.Infrastructure.Persistence
 {
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
+    using PaymentProcessor.Domain.Entities;
+    using PaymentProcessor.Domain.Events;
     using PaymentProcessor.Infrastructure.Persistence.Auditing;
-    using PaymentProcessor.Infrastructure.Persistence.Entities.Inbox;
     using PaymentProcessor.Infrastructure.Persistence.Entities.Payment;
 
     /// <summary>
@@ -66,16 +68,16 @@ namespace PaymentProcessor.Infrastructure.Persistence
         {
             base.OnModelCreating(modelBuilder);
 
+            var statusConverter = new EnumToStringConverter<InboxEventStatus>();
+
             // Configure InboxEvent entity
             modelBuilder.Entity<InboxEvent>(entity =>
             {
                 entity.ToTable("inbox_events");
                 entity.HasKey(e => e.EventId);
-                entity.Property(e => e.Status).IsRequired();
-                entity.Property(e => e.RetryCount).IsRequired();
+                entity.Property(e => e.Status).IsRequired().HasConversion(statusConverter);
                 entity.Property(e => e.CreatedAt).IsRequired();
                 entity.Property(e => e.UpdatedAt).IsRequired();
-                entity.Property(e => e.ProcessingStartedAt).IsRequired(false);
             });
 
             // Configure PaymentEventRecord entity
