@@ -2,7 +2,7 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace PaymentProcessor.Domain.Interfaces
+namespace PaymentProcessor.Domain.Repositories
 {
     using System.Threading;
     using System.Threading.Tasks;

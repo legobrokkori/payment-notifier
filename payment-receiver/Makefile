@@ -3,13 +3,16 @@ BIN_DIR := bin
 CMD_DIR := ./cmd
 GO_FILES := $(shell find . -name '*.go' -not -path "./vendor/*")
 
+PROTO_DIR := proto
+PROTO_OUT := gen
+
 MIGRATE_VERSION := v4.16.2
 MIGRATE := migrate
 
 MIGRATE_DB_URL := postgres://user:password@localhost:5432/payment?sslmode=disable
 MIGRATE_DIR := migrations
 
-.PHONY: all build-webhook build-dispatcher run-webhook run-dispatcher test-unit test-integration lint fmt clean migrate-up migrate-down migrate-create
+.PHONY: all build-webhook build-dispatcher run-webhook run-dispatcher test-unit test-integration lint fmt clean migrate-up migrate-down migrate-create generate
 
 all: fmt lint test-unit test-integration
 
@@ -59,3 +62,9 @@ migrate-down:
 
 migrate-create:
 	$(MIGRATE) create -ext sql -dir $(MIGRATE_DIR) -format timestamp "$(name)"
+
+generate:
+	mkdir -p $(PROTO_OUT)
+	protoc --go_out=$(PROTO_OUT) --go_opt=paths=source_relative \
+	       --go-grpc_out=$(PROTO_OUT) --go-grpc_opt=paths=source_relative \
+	       $(PROTO_DIR)/*.proto

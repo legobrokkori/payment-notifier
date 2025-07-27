@@ -50,7 +50,14 @@ func TestNewPaymentEvent_MissingFields(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			event, err := domain.NewPaymentEvent(tt.id, tt.amount, tt.currency, tt.method, tt.status, tt.occurredAt)
+			event, err := domain.NewPaymentEvent(
+				tt.id,
+				tt.amount,
+				tt.currency,
+				tt.method,
+				tt.status,
+				tt.occurredAt,
+			)
 			assert.Nil(t, event)
 			assert.Error(t, err)
 		})
@@ -58,7 +65,14 @@ func TestNewPaymentEvent_MissingFields(t *testing.T) {
 }
 
 func TestNewPaymentEvent_InvalidStatus(t *testing.T) {
-	event, err := domain.NewPaymentEvent("evt_001", 100, "USD", "card", "unknown_status", "2024-04-01T12:00:00Z")
+	event, err := domain.NewPaymentEvent(
+		"evt_001",
+		100,
+		"USD",
+		"card",
+		"unknown_status",
+		"2024-04-01T12:00:00Z",
+	)
 	assert.Nil(t, event)
 	assert.EqualError(t, err, "invalid status")
 }

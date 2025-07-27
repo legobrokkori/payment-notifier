@@ -11,7 +11,7 @@ using Moq;
 using PaymentProcessor.Application.Workers;
 using PaymentProcessor.Domain.Entities;
 using PaymentProcessor.Domain.Interfaces;
-using PaymentProcessor.Infrastructure.Persistence.Entities.Inbox;
+using PaymentProcessor.Domain.Repositories;
 
 using Xunit;
 
@@ -23,7 +23,7 @@ public class RedisInboxIngestWorkerTests
     public async Task RunAsync_Should_Not_Save_When_No_Event()
     {
         var eventSourceMock = new Mock<IPaymentEventSource>();
-        var inboxRepositoryMock = new Mock<IInboxEventRepository>();
+        var inboxRepositoryMock = new Mock<PaymentProcessor.Domain.Repositories.IInboxEventRepository>();
         var loggerMock = new Mock<ILogger<RedisInboxIngestWorker>>();
 
         eventSourceMock.Setup(s => s.DequeueAsync(It.IsAny<CancellationToken>()))
@@ -39,7 +39,7 @@ public class RedisInboxIngestWorkerTests
     public async Task RunAsync_Should_Stop_After_MaxMessages()
     {
         var eventSourceMock = new Mock<IPaymentEventSource>();
-        var inboxRepositoryMock = new Mock<IInboxEventRepository>();
+        var inboxRepositoryMock = new Mock<PaymentProcessor.Domain.Repositories.IInboxEventRepository>();
         var loggerMock = new Mock<ILogger<RedisInboxIngestWorker>>();
 
         var paymentEvent = new PaymentEvent
@@ -66,7 +66,7 @@ public class RedisInboxIngestWorkerTests
     public async Task RunAsync_Should_Handle_Dequeue_Exception()
     {
         var eventSourceMock = new Mock<IPaymentEventSource>();
-        var inboxRepositoryMock = new Mock<IInboxEventRepository>();
+        var inboxRepositoryMock = new Mock<PaymentProcessor.Domain.Repositories.IInboxEventRepository>();
         var loggerMock = new Mock<ILogger<RedisInboxIngestWorker>>();
 
         eventSourceMock.Setup(s => s.DequeueAsync(It.IsAny<CancellationToken>()))
@@ -90,7 +90,7 @@ public class RedisInboxIngestWorkerTests
             EventAt = DateTimeOffset.UtcNow,
         };
         var eventSourceMock = new Mock<IPaymentEventSource>();
-        var inboxRepositoryMock = new Mock<IInboxEventRepository>();
+        var inboxRepositoryMock = new Mock<PaymentProcessor.Domain.Repositories.IInboxEventRepository>();
         var loggerMock = new Mock<ILogger<RedisInboxIngestWorker>>();
 
         eventSourceMock.SetupSequence(s => s.DequeueAsync(It.IsAny<CancellationToken>()))
@@ -120,7 +120,7 @@ public class RedisInboxIngestWorkerTests
         };
 
         var eventSourceMock = new Mock<IPaymentEventSource>();
-        var inboxRepositoryMock = new Mock<IInboxEventRepository>();
+        var inboxRepositoryMock = new Mock<PaymentProcessor.Domain.Repositories.IInboxEventRepository>();
         var loggerMock = new Mock<ILogger<RedisInboxIngestWorker>>();
 
         // Return the same event twice, followed by null to break the loop

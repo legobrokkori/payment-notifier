@@ -14,7 +14,7 @@ namespace PaymentProcessor.Application.Workers
     using PaymentProcessor.Domain.Entities;
     using PaymentProcessor.Domain.Events;
     using PaymentProcessor.Domain.Interfaces;
-    using PaymentProcessor.Infrastructure.Persistence.Entities.Inbox;
+    using PaymentProcessor.Domain.Repositories;
 
     /// <summary>
     /// Background worker that consumes payment events from Redis
@@ -69,7 +69,7 @@ namespace PaymentProcessor.Application.Workers
                 {
                     EventId = paymentEvent.Id,
                     RawPayload = payload,
-                    Status = InboxEventStatus.Pending.ToString(),
+                    CreatedAt = DateTime.UtcNow,
                 };
 
                 try

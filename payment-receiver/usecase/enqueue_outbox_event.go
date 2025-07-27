@@ -3,9 +3,9 @@ package usecase
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+
 	"payment-receiver/domain"
 	"payment-receiver/repository"
 )
@@ -17,42 +17,28 @@ type OutboxEnqueuer struct {
 
 // OutboxEventSaver defines the interface for saving events to outbox.
 type OutboxEventSaver interface {
-	EnqueueOutboxEvent(ctx context.Context, event *domain.PaymentEvent) error
+	EnqueueOutboxEvent(ctx context.Context, event *domain.OutboxEvent) error
 }
 
 func NewOutboxEnqueuer(repo repository.OutboxRepository) *OutboxEnqueuer {
 	return &OutboxEnqueuer{Repo: repo}
 }
 
-func (e *OutboxEnqueuer) EnqueueOutboxEvent(ctx context.Context, event *domain.PaymentEvent) error {
-	exists, err := e.Repo.ExistsByAggregateID(ctx, event.ID)
+func (e *OutboxEnqueuer) EnqueueOutboxEvent(ctx context.Context, event *domain.OutboxEvent) error {
+	exists, err := e.Repo.ExistsByAggregateID(ctx, event.AggregateID)
 	if err != nil {
 		return fmt.Errorf("failed to check idempotency: %w", err)
 	}
 	if exists {
-		return fmt.Errorf("event already exists: %s", event.ID)
+		return ErrDuplicateEvent
 	}
 
-	payload, err := json.Marshal(event)
-	if err != nil {
-		return fmt.Errorf("failed to marshal payment event: %w", err)
-	}
-
-	outboxEvent, err := domain.NewOutboxEvent(
-		event.ID,
-		"payment_event",
-		event.OccurredAt,
-		payload,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create outbox event: %w", err)
-	}
-
-	if err := e.Repo.Insert(ctx, outboxEvent); err != nil {
+	if err := e.Repo.Insert(ctx, event); err != nil {
 		if errors.Is(err, ErrDuplicateEvent) {
 			return err
 		}
-		return err
+		return fmt.Errorf("failed to insert outbox event: %w", err)
 	}
+
 	return nil
 }

@@ -78,6 +78,9 @@ packages/
 *.lcov
 coverage.*
 
+# Local config
+appsettings.json
+
 #########################
 # Node (if frontend or tooling involved)
 #########################

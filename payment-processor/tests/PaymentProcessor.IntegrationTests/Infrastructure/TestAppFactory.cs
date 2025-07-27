@@ -15,11 +15,11 @@ public static class TestAppFactory
     {
         var services = new ServiceCollection();
 
-        var connectionString = Environment.GetEnvironmentVariable("CONNECTIONSTRING");
+        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new InvalidOperationException("Missing CONNECTIONSTRING environment variable.");
+            throw new InvalidOperationException("Missing DB_CONNECTION_STRING environment variable.");
         }
 
         services.AddDbContext<AppDbContext>(options =>

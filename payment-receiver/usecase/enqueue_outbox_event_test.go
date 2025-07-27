@@ -26,7 +26,10 @@ func (m *mockOutboxEnqueuerRepo) Insert(ctx context.Context, event *domain.Outbo
 	return args.Error(0)
 }
 
-func (m *mockOutboxEnqueuerRepo) FetchPending(ctx context.Context, limit int) ([]*domain.OutboxEvent, error) {
+func (m *mockOutboxEnqueuerRepo) FetchPending(
+	ctx context.Context,
+	limit int,
+) ([]*domain.OutboxEvent, error) {
 	panic("not implemented")
 }
 
@@ -60,7 +63,13 @@ func TestOutboxEnqueuer_EnqueueOutboxEvent(t *testing.T) {
 			len(ev.Payload) > 0 // ensure it’s marshaled
 	})).Return(nil).Once()
 
-	err := enqueuer.EnqueueOutboxEvent(context.Background(), paymentEvent)
+	outboxEvent := &domain.OutboxEvent{
+		AggregateID: paymentEvent.ID,
+		EventType:   "payment_event",
+		Payload:     []byte(`{"test": "data"}`),
+	}
+
+	err := enqueuer.EnqueueOutboxEvent(context.Background(), outboxEvent)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }

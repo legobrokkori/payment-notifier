@@ -42,6 +42,7 @@ func (m *mockOutboxRepo) MarkAsSent(_ context.Context, id uuid.UUID) error {
 	m.Marked = append(m.Marked, id)
 	return nil
 }
+
 func (m *mockOutboxRepo) ExistsByAggregateID(_ context.Context, _ string) (bool, error) {
 	return false, nil
 }

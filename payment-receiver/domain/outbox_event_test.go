@@ -5,33 +5,91 @@ import (
 	"time"
 
 	"payment-receiver/domain"
+	pr "payment-receiver/gen/proto"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewOutboxEvent_Validation(t *testing.T) {
-	payload := map[string]interface{}{
-		"id": "evt_001",
+func TestNewOutboxEventFromProtoPayment(t *testing.T) {
+	validEvent := &pr.PaymentEvent{
+		Id:         "evt_001",
+		Amount:     1000,
+		Currency:   "USD",
+		Method:     "card",
+		Status:     "paid",
+		OccurredAt: time.Now().Format(time.RFC3339),
 	}
 
-	eventAt := time.Now()
-
-	t.Run("valid input returns OutboxEvent", func(t *testing.T) {
-		event, err := domain.NewOutboxEvent("user_123", "payment_event", eventAt, payload)
+	t.Run("valid proto payment event", func(t *testing.T) {
+		ev, err := domain.NewOutboxEventFromProtoPayment(validEvent)
 		assert.NoError(t, err)
-		assert.NotNil(t, event)
-		assert.Equal(t, "user_123", event.AggregateID)
+		assert.NotNil(t, ev)
+		assert.Equal(t, "evt_001", ev.AggregateID)
 	})
 
-	t.Run("empty aggregateID returns error", func(t *testing.T) {
-		event, err := domain.NewOutboxEvent("", "payment_event", eventAt, payload)
+	t.Run("nil proto event returns error", func(t *testing.T) {
+		ev, err := domain.NewOutboxEventFromProtoPayment(nil)
 		assert.Error(t, err)
-		assert.Nil(t, event)
+		assert.Nil(t, ev)
 	})
 
-	t.Run("empty eventType returns error", func(t *testing.T) {
-		event, err := domain.NewOutboxEvent("user_123", "", eventAt, payload)
-		assert.Error(t, err)
-		assert.Nil(t, event)
+	t.Run("missing ID returns error", func(t *testing.T) {
+		event := cloneEvent(validEvent)
+		event.Id = ""
+		ev, err := domain.NewOutboxEventFromProtoPayment(event)
+		assert.ErrorContains(t, err, "id is required")
+		assert.Nil(t, ev)
 	})
+
+	t.Run("non-positive amount returns error", func(t *testing.T) {
+		event := cloneEvent(validEvent)
+		event.Amount = 0
+		ev, err := domain.NewOutboxEventFromProtoPayment(event)
+		assert.ErrorContains(t, err, "amount must be positive")
+		assert.Nil(t, ev)
+	})
+
+	t.Run("empty currency returns error", func(t *testing.T) {
+		event := cloneEvent(validEvent)
+		event.Currency = ""
+		ev, err := domain.NewOutboxEventFromProtoPayment(event)
+		assert.ErrorContains(t, err, "currency is required")
+		assert.Nil(t, ev)
+	})
+
+	t.Run("empty method returns error", func(t *testing.T) {
+		event := cloneEvent(validEvent)
+		event.Method = ""
+		ev, err := domain.NewOutboxEventFromProtoPayment(event)
+		assert.ErrorContains(t, err, "method is required")
+		assert.Nil(t, ev)
+	})
+
+	t.Run("invalid status returns error", func(t *testing.T) {
+		event := cloneEvent(validEvent)
+		event.Status = "unknown"
+		ev, err := domain.NewOutboxEventFromProtoPayment(event)
+		assert.ErrorContains(t, err, "invalid status")
+		assert.Nil(t, ev)
+	})
+
+	t.Run("invalid occurred_at format returns error", func(t *testing.T) {
+		event := cloneEvent(validEvent)
+		event.OccurredAt = "not-a-date"
+		ev, err := domain.NewOutboxEventFromProtoPayment(event)
+		assert.ErrorContains(t, err, "invalid occurred_at format")
+		assert.Nil(t, ev)
+	})
+}
+
+// cloneEvent creates a deep copy of a proto.PaymentEvent.
+func cloneEvent(e *pr.PaymentEvent) *pr.PaymentEvent {
+	return &pr.PaymentEvent{
+		Id:         e.Id,
+		Amount:     e.Amount,
+		Currency:   e.Currency,
+		Method:     e.Method,
+		Status:     e.Status,
+		OccurredAt: e.OccurredAt,
+	}
 }

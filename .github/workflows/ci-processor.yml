@@ -39,7 +39,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          global-json-file: ./payment-processor/.global.json
 
       - name: Restore dependencies
         run: dotnet restore
@@ -54,6 +54,7 @@ jobs:
 
       - name: Run code format check
         run: dotnet format --verify-no-changes --verbosity diagnostic --exclude src/PaymentProcessor/Infrastructure/Persistence/Migrations
+        --diagnostics "IDE*,SA1200,SA1201,SA1413"
         working-directory: payment-processor
 
       - name: Build with analyzers

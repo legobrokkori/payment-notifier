@@ -7,7 +7,7 @@ namespace PaymentProcessor.Infrastructure.Persistence
     using Microsoft.EntityFrameworkCore;
 
     using PaymentProcessor.Domain.Entities;
-    using PaymentProcessor.Domain.Interfaces;
+    using PaymentProcessor.Domain.Repositories;
     using PaymentProcessor.Infrastructure.Persistence.Entities.Payment;
 
     /// <summary>

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"payment-receiver/domain"
+	"payment-receiver/gen/proto"
 	"payment-receiver/usecase"
 
 	"github.com/gin-gonic/gin"
@@ -32,20 +33,25 @@ func WebhookHandler(enqueuer usecase.OutboxEventSaver) gin.HandlerFunc {
 			return
 		}
 
-		event, err := domain.NewPaymentEvent(
-			req.ID,
-			req.Amount,
-			req.Currency,
-			req.Method,
-			req.Status,
-			req.OccurredAt,
-		)
+		// Construct a protobuf PaymentEvent
+		paymentEvent := &proto.PaymentEvent{
+			Id:         req.ID,
+			Amount:     int32(req.Amount),
+			Currency:   req.Currency,
+			Method:     req.Method,
+			Status:     req.Status,
+			OccurredAt: req.OccurredAt,
+		}
+
+		// Convert to OutboxEvent (with protobuf payload)
+		outboxEvent, err := domain.NewOutboxEventFromProtoPayment(paymentEvent)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := enqueuer.EnqueueOutboxEvent(c.Request.Context(), event); err != nil {
+		// Enqueue to outbox
+		if err := enqueuer.EnqueueOutboxEvent(c.Request.Context(), outboxEvent); err != nil {
 			if errors.Is(err, usecase.ErrDuplicateEvent) {
 				c.JSON(http.StatusOK, gin.H{
 					"status": "duplicate",
@@ -58,9 +64,10 @@ func WebhookHandler(enqueuer usecase.OutboxEventSaver) gin.HandlerFunc {
 			return
 		}
 
+		// Return success response with original payload
 		c.JSON(http.StatusCreated, gin.H{
 			"status":  "received",
-			"payload": event,
+			"payload": paymentEvent,
 		})
 	}
 }

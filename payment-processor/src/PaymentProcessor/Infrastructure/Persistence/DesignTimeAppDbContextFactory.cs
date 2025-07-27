@@ -19,20 +19,16 @@ namespace PaymentProcessor.Infrastructure.Persistence
         /// <returns>A new configured instance of <see cref="AppDbContext"/>.</returns>
         public AppDbContext CreateDbContext(string[] args)
         {
-            // Load configuration from appsettings.Development.json
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory()) // Ensure this points to your working directory
-                .AddJsonFile("appsettings.json", optional: false)
-                .Build();
+            var connectionString = Environment.GetEnvironmentVariable("CONNECTIONSTRING");
 
-            // Extract the connection string from configuration
-            var connectionString = configuration.GetSection("Database")["ConnectionString"];
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Environment variable 'CONNECTIONSTRING' is not set.");
+            }
 
-            // Configure EF Core with PostgreSQL or other provider
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseNpgsql(connectionString);
 
-            // Return a new instance of your AppDbContext
             return new AppDbContext(optionsBuilder.Options);
         }
     }
