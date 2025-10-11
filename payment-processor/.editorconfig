@@ -23,6 +23,7 @@ csharp_space_between_new_and_parentheses = true
 
 # StyleCop: disable verbose comments and formatting rules
 dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1201.severity = none
 dotnet_diagnostic.SA1600.severity = none
 dotnet_diagnostic.SA1601.severity = none
 dotnet_diagnostic.SA1604.severity = none
@@ -33,12 +34,9 @@ dotnet_diagnostic.SA1633.severity = none
 dotnet_diagnostic.SA1000.severity = none
 dotnet_diagnostic.SA1011.severity = none
 dotnet_diagnostic.SA1118.severity = none
+dotnet_diagnostic.SA1122.severity = none
 dotnet_diagnostic.CS1591.severity = none
 
 # Migrations (auto-generated files)
 [src/PaymentProcessor/Infrastructure/Persistence/Migrations/*.cs]
 dotnet_diagnostic.SA1413.severity = none
-
-# Misc
-dotnet_diagnostic.SA1122.severity = none
-dotnet_diagnostic.SA1201.severity = none
