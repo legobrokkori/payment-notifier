@@ -26,9 +26,13 @@ public class DatabaseFixture : IAsyncLifetime
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         // Ensure clean slate - delete only if exists
-        if (await dbContext.Database.CanConnectAsync())
+        try
         {
             await dbContext.Database.EnsureDeletedAsync();
+        }
+        catch
+        {
+            // Database doesn't exist yet, which is fine
         }
 
         await dbContext.Database.EnsureCreatedAsync();
