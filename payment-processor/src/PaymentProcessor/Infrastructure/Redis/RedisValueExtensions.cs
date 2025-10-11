@@ -11,12 +11,12 @@ namespace PaymentProcessor.Infrastructure.Redis
     /// </summary>
     internal static class RedisValueExtensions
     {
-        public static bool TryGetValue(this RedisValue value, out byte[] ? bytes)
+        public static bool TryGetValue(this RedisValue value, out byte[]? bytes)
         {
             try
             {
-                bytes = (byte[])value;
-                return true;
+                bytes = (byte[]?)value;
+                return bytes != null;
             }
             catch
             {
