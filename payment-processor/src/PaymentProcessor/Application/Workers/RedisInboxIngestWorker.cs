@@ -65,12 +65,7 @@ namespace PaymentProcessor.Application.Workers
 
                 var payload = JsonSerializer.Serialize(paymentEvent);
 
-                var inboxEvent = new InboxEvent
-                {
-                    EventId = paymentEvent.Id,
-                    RawPayload = payload,
-                    CreatedAt = DateTime.UtcNow,
-                };
+                var inboxEvent = InboxEvent.CreatePending(paymentEvent.Id, payload);
 
                 try
                 {

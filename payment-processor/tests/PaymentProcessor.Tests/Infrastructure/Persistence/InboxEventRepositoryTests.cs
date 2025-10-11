@@ -30,7 +30,6 @@ public class InboxEventRepositoryTests
     {
         EventId = "event-123",
         RawPayload = "{}",
-        CreatedAt = DateTime.UtcNow,
     };
 
     /// <summary>

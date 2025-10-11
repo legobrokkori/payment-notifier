@@ -1,12 +1,13 @@
 using System;
 using PaymentProcessor.Domain.Events;
+using PaymentProcessor.Infrastructure.Persistence.Auditing;
 
 namespace PaymentProcessor.Domain.Entities;
 
 /// <summary>
 /// Domain entity representing an event received from the inbox stream.
 /// </summary>
-public class InboxEvent
+public class InboxEvent : IAuditableEntity
 {
     /// <summary>
     /// Gets the unique identifier of the inbox event.
@@ -24,14 +25,16 @@ public class InboxEvent
     public InboxEventStatus Status { get; private set; }
 
     /// <summary>
-    /// Gets the timestamp when this event was created.
+    /// Gets or sets the timestamp when this event was created.
+    /// Automatically set by EF Core on insert.
     /// </summary>
-    required public DateTime CreatedAt { get; init; }
+    public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Gets the timestamp when this event was last updated.
+    /// Gets or sets the timestamp when this event was last updated.
+    /// Automatically set by EF Core on insert/update.
     /// </summary>
-    public DateTime UpdatedAt { get; private set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 
     public static InboxEvent CreatePending(string eventId, string rawPayload)
     {
@@ -40,30 +43,33 @@ public class InboxEvent
             EventId = eventId,
             RawPayload = rawPayload,
             Status = InboxEventStatus.Pending,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
         };
     }
 
-    public void MarkCompleted() => this.Status = InboxEventStatus.Completed;
-
-    public void MarkFailed() => this.Status = InboxEventStatus.Failed;
-
-    public void MarkAsCompleted()
+    /// <summary>
+    /// Marks the event as successfully completed.
+    /// UpdatedAt will be automatically set by EF Core.
+    /// </summary>
+    public void MarkCompleted()
     {
         this.Status = InboxEventStatus.Completed;
-        this.UpdatedAt = DateTime.UtcNow;
     }
 
-    public void MarkAsProcessed()
-    {
-        this.Status = InboxEventStatus.Processing;
-        this.UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void MarkAsFailed()
+    /// <summary>
+    /// Marks the event as failed.
+    /// UpdatedAt will be automatically set by EF Core.
+    /// </summary>
+    public void MarkFailed()
     {
         this.Status = InboxEventStatus.Failed;
-        this.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Marks the event as currently being processed.
+    /// UpdatedAt will be automatically set by EF Core.
+    /// </summary>
+    public void MarkAsProcessing()
+    {
+        this.Status = InboxEventStatus.Processing;
     }
 }
