@@ -29,8 +29,7 @@ public class InboxEventRepositoryTests
     private readonly InboxEvent sampleEvent = new()
     {
         EventId = "event-123",
-        RawPayload = "{}",
-        CreatedAt = DateTime.UtcNow,
+        RawPayload = "{}"
     };
 
     /// <summary>
