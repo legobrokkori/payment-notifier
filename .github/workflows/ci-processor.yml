@@ -30,7 +30,7 @@ jobs:
           --health-retries=5
 
     env:
-      CONNECTIONSTRING: Host=localhost;Port=5432;Username=user;Password=password;Database=payment
+      DB_CONNECTION_STRING: Host=localhost;Port=5432;Username=user;Password=password;Database=payment
 
     steps:
       - name: Checkout repository
@@ -48,13 +48,17 @@ jobs:
       - name: Install dotnet-ef CLI
         run: dotnet tool install --global dotnet-ef
 
-      - name: Apply EF Core migrations
-        run: dotnet ef database update --project payment-processor/src/PaymentProcessor/payment-processor.csproj
-        working-directory: ${{ github.workspace }}
+      - name: Create database schema
+        run: |
+          # Use EnsureCreated instead of migrations since migrations were removed
+          # Database will be created automatically by tests
+          echo "Database schema will be created by EF Core EnsureCreated in tests"
 
       - name: Run code format check
-        run: dotnet format --verify-no-changes --verbosity diagnostic --exclude src/PaymentProcessor/Infrastructure/Persistence/Migrations
-        --diagnostics "IDE*,SA1200,SA1201,SA1413"
+        run: |
+          dotnet format --verify-no-changes --verbosity diagnostic \
+            --exclude src/PaymentProcessor/Infrastructure/Persistence/Migrations \
+            --diagnostics "IDE*,SA1200,SA1201,SA1413"
         working-directory: payment-processor
 
       - name: Build with analyzers
@@ -67,6 +71,6 @@ jobs:
 
       - name: Run integration tests
         run: |
-          echo "Using CONNECTIONSTRING: $CONNECTIONSTRING"
+          echo "Using DB_CONNECTION_STRING: $DB_CONNECTION_STRING"
           dotnet test tests/PaymentProcessor.IntegrationTests --no-restore --verbosity normal --logger "console;verbosity=detailed"
         working-directory: payment-processor

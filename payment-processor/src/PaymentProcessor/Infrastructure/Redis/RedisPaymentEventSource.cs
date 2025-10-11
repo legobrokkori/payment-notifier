@@ -57,7 +57,7 @@ namespace PaymentProcessor.Infrastructure.Redis
                 }
 
                 var dataField = entry.Value.Values.FirstOrDefault(x => x.Name == "data");
-                if (!dataField.Value.HasValue || !dataField.Value.TryGetValue(out byte[] ? rawBytes))
+                if (!dataField.Value.HasValue || !dataField.Value.TryGetValue(out byte[]? rawBytes))
                 {
                     this.logger.LogWarning("Stream entry missing or invalid 'data' field. EntryId={EntryId}", entry.Value.Id);
                     return null;

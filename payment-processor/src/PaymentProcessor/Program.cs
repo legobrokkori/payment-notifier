@@ -9,10 +9,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using PaymentProcessor.Application.Services;
 using PaymentProcessor.Application.Workers;
 using PaymentProcessor.Domain.Interfaces;
+using PaymentProcessor.Domain.Repositories;
 using PaymentProcessor.Infrastructure.Configurations;
 using PaymentProcessor.Infrastructure.Persistence;
+using PaymentProcessor.Infrastructure.Persistence.Repositories;
 using PaymentProcessor.Infrastructure.Redis;
 
 using StackExchange.Redis;
@@ -49,9 +52,10 @@ internal class Program
 
                 // Redis & EF dependencies
                 services.AddSingleton<IPaymentEventSource, RedisPaymentEventSource>();
-                services.AddScoped<PaymentProcessor.Domain.Repositories.IPaymentRepository, PaymentRepository>();
-                services.AddScoped<PaymentProcessor.Domain.Repositories.IInboxEventRepository, PaymentProcessor.Infrastructure.Persistence.Repositories.InboxEventRepository>();
-                services.AddScoped<PaymentProcessor.Application.Services.IInboxEventProcessor, PaymentProcessor.Application.Services.InboxEventProcessor>();
+                services.AddScoped<IPaymentRepository, PaymentRepository>();
+                services.AddScoped<IInboxEventRepository, InboxEventRepository>();
+                services.AddScoped<IInboxEventLogRepository, InboxEventLogRepository>();
+                services.AddScoped<IInboxEventProcessor, InboxEventProcessor>();
                 services.AddScoped<RedisInboxIngestWorker>();
                 services.AddScoped<InboxToPaymentWorker>();
 

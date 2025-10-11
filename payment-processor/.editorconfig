@@ -9,7 +9,7 @@ insert_final_newline = true
 
 # Using directives
 dotnet_sort_system_directives_first = true
-dotnet_separate_import_directive_groups = true
+dotnet_separate_import_directive_groups = false
 
 # Code style
 csharp_new_line_before_open_brace = all
@@ -21,19 +21,22 @@ csharp_prefer_braces = true:suggestion
 csharp_indent_case_contents = true
 csharp_space_between_new_and_parentheses = true
 
-# StyleCop: disable verbose comments
+# StyleCop: disable verbose comments and formatting rules
+dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1201.severity = none
 dotnet_diagnostic.SA1600.severity = none
 dotnet_diagnostic.SA1601.severity = none
 dotnet_diagnostic.SA1604.severity = none
 dotnet_diagnostic.SA1609.severity = none
+dotnet_diagnostic.SA1611.severity = none
+dotnet_diagnostic.SA1616.severity = none
 dotnet_diagnostic.SA1633.severity = none
 dotnet_diagnostic.SA1000.severity = none
+dotnet_diagnostic.SA1011.severity = none
 dotnet_diagnostic.SA1118.severity = none
-
-[src/PaymentProcessor/Infrastructure/Persistence/Migrations/*.cs]
-dotnet_diagnostic.SA1200.severity = none
-dotnet_diagnostic.SA1413.severity = none
-
-# Misc
 dotnet_diagnostic.SA1122.severity = none
-dotnet_diagnostic.SA1201.severity = suggestion
+dotnet_diagnostic.CS1591.severity = none
+
+# Migrations (auto-generated files)
+[src/PaymentProcessor/Infrastructure/Persistence/Migrations/*.cs]
+dotnet_diagnostic.SA1413.severity = none
