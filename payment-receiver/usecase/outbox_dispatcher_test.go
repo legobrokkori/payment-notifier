@@ -4,6 +4,7 @@ package usecase_test
 import (
 	"context"
 	"encoding/json"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 )
 
 type mockOutboxRepo struct {
+	mu      sync.Mutex
 	Fetched bool
 	Marked  []uuid.UUID
 }
@@ -25,6 +27,8 @@ func (m *mockOutboxRepo) Insert(_ context.Context, _ *domain.OutboxEvent) error 
 }
 
 func (m *mockOutboxRepo) FetchPending(_ context.Context, _ int) ([]*domain.OutboxEvent, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Fetched = true
 	return []*domain.OutboxEvent{
 		{
@@ -32,13 +36,16 @@ func (m *mockOutboxRepo) FetchPending(_ context.Context, _ int) ([]*domain.Outbo
 			AggregateID: "user_123",
 			EventType:   "PaymentCompleted",
 			Payload:     json.RawMessage(`{"id":"evt_001"}`),
-			Status:      "pending",
+			Status:      domain.StatusPending,
 			CreatedAt:   time.Now(),
+			EventAt:     time.Now(),
 		},
 	}, nil
 }
 
 func (m *mockOutboxRepo) MarkAsSent(_ context.Context, id uuid.UUID) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Marked = append(m.Marked, id)
 	return nil
 }
@@ -47,15 +54,30 @@ func (m *mockOutboxRepo) ExistsByAggregateID(_ context.Context, _ string) (bool,
 	return false, nil
 }
 
+func (m *mockOutboxRepo) GetMarked() []uuid.UUID {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([]uuid.UUID{}, m.Marked...)
+}
+
 type mockOutboxQueue struct {
+	mu     sync.Mutex
 	Called bool
-	Event  *domain.OutboxEvent
+	Events []*domain.OutboxEvent
 }
 
 func (m *mockOutboxQueue) Enqueue(_ context.Context, event *domain.OutboxEvent) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Called = true
-	m.Event = event
+	m.Events = append(m.Events, event)
 	return nil
+}
+
+func (m *mockOutboxQueue) GetEvents() []*domain.OutboxEvent {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([]*domain.OutboxEvent{}, m.Events...)
 }
 
 func TestOutboxDispatcher_Dispatch(t *testing.T) {
@@ -68,5 +90,10 @@ func TestOutboxDispatcher_Dispatch(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, repo.Fetched)
 	assert.True(t, queue.Called)
-	assert.Len(t, repo.Marked, 1)
+
+	marked := repo.GetMarked()
+	assert.Len(t, marked, 1)
+
+	events := queue.GetEvents()
+	assert.Len(t, events, 1)
 }
