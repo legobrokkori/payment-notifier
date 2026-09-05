@@ -4,8 +4,10 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"time"
+	"log"
+	"sync"
 
+	"payment-receiver/domain"
 	"payment-receiver/repository"
 )
 
@@ -20,23 +22,42 @@ func NewOutboxDispatcher(repo repository.OutboxRepository, queue OutboxQueue) *O
 	return &OutboxDispatcher{repo: repo, queue: queue}
 }
 
-// Dispatch retrieves pending events and enqueues them, marking them as sent.
+// Dispatch retrieves pending events and enqueues them in parallel, marking them as sent.
 func (d *OutboxDispatcher) Dispatch(ctx context.Context, limit int) error {
 	events, err := d.repo.FetchPending(ctx, limit)
 	if err != nil {
 		return fmt.Errorf("failed to fetch events: %w", err)
 	}
 
+	if len(events) == 0 {
+		return nil
+	}
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(events))
+
 	for _, ev := range events {
-		err := d.queue.Enqueue(ctx, ev)
-		if err != nil {
-			fmt.Printf("enqueue failed for event %s: %v\n", ev.ID, err)
-			continue
-		}
-		if err := d.repo.MarkAsSent(ctx, ev.ID); err != nil {
-			fmt.Printf("mark as sent failed for event %s: %v\n", ev.ID, err)
-		}
-		time.Sleep(100 * time.Millisecond)
+		wg.Add(1)
+		go func(event *domain.OutboxEvent) {
+			defer wg.Done()
+
+			if err := d.queue.Enqueue(ctx, event); err != nil {
+				errCh <- fmt.Errorf("enqueue failed for event %s: %w", event.ID, err)
+				return
+			}
+
+			if err := d.repo.MarkAsSent(ctx, event.ID); err != nil {
+				errCh <- fmt.Errorf("mark as sent failed for event %s: %w", event.ID, err)
+			}
+		}(ev)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	// エラーがあればログ出力
+	for err := range errCh {
+		log.Println(err)
 	}
 
 	return nil
