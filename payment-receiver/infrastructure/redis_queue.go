@@ -62,3 +62,8 @@ func (q *RedisQueue) Enqueue(ctx context.Context, event *domain.OutboxEvent) err
 		},
 	}).Err()
 }
+
+// Close closes the Redis connection.
+func (q *RedisQueue) Close() error {
+	return q.rdb.Close()
+}

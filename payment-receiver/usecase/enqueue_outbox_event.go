@@ -25,17 +25,11 @@ func NewOutboxEnqueuer(repo repository.OutboxRepository) *OutboxEnqueuer {
 }
 
 func (e *OutboxEnqueuer) EnqueueOutboxEvent(ctx context.Context, event *domain.OutboxEvent) error {
-	exists, err := e.Repo.ExistsByAggregateID(ctx, event.AggregateID)
-	if err != nil {
-		return fmt.Errorf("failed to check idempotency: %w", err)
-	}
-	if exists {
-		return ErrDuplicateEvent
-	}
-
+	// Race Condition を避けるため、DB制約のみで重複チェックを行う
+	// ExistsByAggregateID + Insert の間に別リクエストが入る可能性があるため削除
 	if err := e.Repo.Insert(ctx, event); err != nil {
 		if errors.Is(err, ErrDuplicateEvent) {
-			return err
+			return ErrDuplicateEvent
 		}
 		return fmt.Errorf("failed to insert outbox event: %w", err)
 	}
